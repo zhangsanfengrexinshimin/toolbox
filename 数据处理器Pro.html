@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据处理器 Pro v2 - 多文件版</title>
+    <script src="xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container {
+            max-width: 1500px; margin: 0 auto; background: white;
+            border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 25px; text-align: center;
+        }
+        .header h1 { font-size: 30px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; font-size: 15px; }
+        .main-content { padding: 25px; }
+
+        /* Upload */
+        .upload-area {
+            border: 3px dashed #667eea; border-radius: 12px; padding: 40px;
+            text-align: center; background: #f8f9ff; transition: all 0.3s;
+            cursor: pointer; margin-bottom: 20px;
+        }
+        .upload-area:hover { border-color: #764ba2; background: #f0f2ff; }
+        .upload-area.drag-over { border-color: #764ba2; background: #e8ebff; transform: scale(1.01); }
+        .upload-icon { font-size: 48px; margin-bottom: 12px; }
+        .upload-text { font-size: 16px; color: #667eea; margin-bottom: 8px; }
+        .upload-hint { color: #888; font-size: 13px; }
+        .file-input { display: none; }
+
+        /* Buttons */
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background: #d0d0d0; }
+        .btn-success { background: #4caf50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-small { padding: 7px 14px; font-size: 13px; }
+        .btn-tiny { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+
+        /* Alerts */
+        .alert { padding: 12px 18px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+        .alert-info { background: #e3f2fd; color: #1976d2; border-left: 4px solid #1976d2; }
+        .alert-success { background: #e8f5e9; color: #4caf50; border-left: 4px solid #4caf50; }
+        .alert-error { background: #ffebee; color: #f44336; border-left: 4px solid #f44336; }
+        .alert-warning { background: #fff8e1; color: #f57c00; border-left: 4px solid #f57c00; }
+
+        /* File List Panel */
+        .file-list-panel {
+            background: #f8f9ff; border: 1px solid #d0d5ff; border-radius: 8px;
+            padding: 15px; margin-bottom: 20px; display: none;
+        }
+        .file-list-panel h3 { color: #667eea; margin-bottom: 12px; font-size: 16px; }
+        .file-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 6px;
+            padding: 12px 15px; margin-bottom: 8px; display: flex;
+            justify-content: space-between; align-items: center; transition: all 0.2s;
+        }
+        .file-card:hover { border-color: #667eea; background: #fafaff; }
+        .file-card.selected { border-color: #667eea; background: #f0f2ff; box-shadow: 0 0 0 2px rgba(102,126,234,0.3); }
+        .file-card-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .file-card-icon { font-size: 24px; flex-shrink: 0; }
+        .file-card-info { min-width: 0; }
+        .file-card-name { font-weight: 600; color: #333; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 400px; }
+        .file-card-meta { color: #888; font-size: 12px; margin-top: 3px; }
+        .file-card-badges { display: flex; gap: 6px; margin-top: 4px; }
+        .file-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px; border: none; background: none; cursor: pointer;
+            font-size: 14px; font-weight: 600; color: #888; border-bottom: 3px solid transparent;
+            margin-bottom: -2px; transition: all 0.3s;
+        }
+        .tab-btn:hover { color: #667eea; }
+        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Settings */
+        .settings-panel {
+            background: #fff9e6; padding: 15px; border-radius: 8px;
+            margin-bottom: 15px; border: 1px solid #ffd700;
+        }
+        .settings-panel h3 { color: #f57c00; margin-bottom: 12px; font-size: 15px; }
+        .setting-row { display: flex; gap: 12px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+        .setting-label { font-weight: 600; min-width: 100px; font-size: 14px; }
+        .encoding-status { padding: 8px; border-radius: 6px; margin-top: 8px; display: none; font-size: 13px; }
+        .encoding-status.success { background: #e8f5e9; color: #4caf50; }
+        .encoding-status.error { background: #ffebee; color: #f44336; }
+
+        /* Merge Panel */
+        .merge-panel {
+            background: #e8f5e9; padding: 15px; border-radius: 8px;
+            margin-bottom: 15px; border: 1px solid #a5d6a7; display: none;
+        }
+        .merge-panel h3 { color: #4caf50; margin-bottom: 12px; font-size: 15px; }
+        .merge-option { margin-bottom: 10px; }
+        .merge-option label { font-weight: 600; margin-right: 10px; }
+        .merge-columns-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+        /* Join Panel */
+        .join-panel {
+            background: #fce4ec; padding: 15px; border-radius: 8px;
+            margin-bottom: 15px; border: 1px solid #f8bbd0; display: none;
+        }
+        .join-panel h3 { color: #c62828; margin-bottom: 12px; font-size: 15px; }
+        .join-config { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+
+        /* Table */
+        .section-title { font-size: 20px; color: #333; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+        .table-container { overflow-x: auto; margin-top: 15px; border: 1px solid #e0e0e0; border-radius: 8px; max-height: 600px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #667eea; color: white; padding: 10px; text-align: left; font-weight: 600; position: sticky; top: 0; z-index: 10; font-size: 13px; }
+        td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; font-size: 13px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        tr:hover { background: #f8f9ff; }
+        .row-source-tag { font-size: 10px; background: #e3f2fd; color: #1976d2; padding: 1px 6px; border-radius: 3px; }
+
+        /* Conditions */
+        .condition-builder { background: #f8f9ff; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .condition-item { background: white; padding: 12px; border-radius: 6px; border: 1px solid #e0e0e0; margin-bottom: 8px; }
+        .condition-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .condition-number { font-weight: 600; color: #667eea; font-size: 14px; }
+        .condition-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+        .condition-row-logic { display: flex; align-items: center; gap: 8px; margin: 6px 0; padding-left: 15px; }
+        .logic-label { font-weight: 600; color: #666; font-size: 13px; }
+        .logic-toggle { display: inline-flex; border-radius: 16px; overflow: hidden; border: 2px solid #667eea; }
+        .logic-toggle button { padding: 4px 12px; border: none; background: white; color: #667eea; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; }
+        .logic-toggle button.active { background: #667eea; color: white; }
+        .condition-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .query-type-label { font-size: 11px; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
+        .exact-query { background: #e3f2fd; color: #1976d2; }
+        .fuzzy-query { background: #fff3e0; color: #f57c00; }
+        .join-query { background: #fce4ec; color: #c62828; }
+
+        select, input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        select { min-width: 130px; }
+
+        /* Results */
+        .results { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; display: none; }
+        .results h3 { color: #4caf50; margin-bottom: 10px; }
+        .download-section { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .raw-preview { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-top: 12px; max-height: 200px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .badge-csv { background: #e8f5e9; color: #4caf50; }
+        .badge-txt { background: #fff3e0; color: #f57c00; }
+        .badge-xlsx { background: #e3f2fd; color: #1976d2; }
+        .badge-warn { background: #fff8e1; color: #f57c00; }
+        .badge-ok { background: #e8f5e9; color: #4caf50; }
+
+        /* Info grid */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+        .info-item { padding: 8px; background: white; border-radius: 6px; }
+        .info-label { font-weight: 600; color: #666; font-size: 12px; }
+        .info-value { font-size: 16px; color: #333; margin-top: 3px; }
+
+        /* Source column highlight */
+        th.from-file { background: #5c6bc0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 数据处理器 Pro v2</h1>
+            <p>多文件导入 · 合并 · 关联 · 精确/模糊查询 · 容错检测 · 完全离线</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽文件到此处上传（支持多文件）</div>
+                <div class="upload-hint">支持 .csv, .xlsx, .xls, .txt 格式 | 可同时选择多个文件 | 自动检测编码和分隔符</div>
+                <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls,.txt" multiple>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>🆕 v2 新功能：</strong>
+                ✅ 多文件同时导入 | ✅ 文件合并（纵向拼接） | ✅ 文件关联（跨文件列匹配 JOIN） |
+                ✅ 文件名展示 | ✅ 超长行容错检测 | ✅ 精确/模糊查询 & 多条件 AND/OR
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px;">正在处理文件...</p>
+            </div>
+
+            <!-- File List -->
+            <div class="file-list-panel" id="fileListPanel">
+                <h3>📂 已导入的文件（点击选择当前操作文件）</h3>
+                <div id="fileListContainer"></div>
+                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-small" onclick="addMoreFiles()">➕ 继续添加文件</button>
+                    <button class="btn btn-success btn-small" id="btnShowMerge" onclick="showMergePanel()" style="display:none;">🔗 合并文件</button>
+                    <button class="btn btn-warning btn-small" id="btnShowJoin" onclick="showJoinPanel()" style="display:none;">🔀 关联文件</button>
+                    <button class="btn btn-danger btn-small" onclick="removeAllFiles()">🗑️ 清除所有文件</button>
+                </div>
+            </div>
+
+            <!-- Merge Panel -->
+            <div class="merge-panel" id="mergePanel">
+                <h3>🔗 文件合并设置</h3>
+                <div class="alert alert-info" style="margin-bottom:10px;">
+                    合并 = 将多个文件的行纵向拼接成一个大表。相同列名的列会合并，不同列名的列会扩展（缺失值填空）。
+                </div>
+                <div class="merge-option">
+                    <label>合并模式：</label>
+                    <select id="mergeMode">
+                        <option value="union">并联合并（所有列都保留，缺失值填空）</option>
+                        <option value="intersect">交集合并（只保留所有文件共有的列）</option>
+                    </select>
+                </div>
+                <div class="merge-option">
+                    <label>添加来源标记列：</label>
+                    <input type="checkbox" id="mergeAddSource" checked>
+                    <span style="font-size:12px;color:#888;">勾选后会在结果中添加"__来源文件__"列</span>
+                </div>
+                <div style="margin-top:10px;">
+                    <button class="btn btn-success btn-small" onclick="executeMerge()">✅ 执行合并</button>
+                    <button class="btn btn-secondary btn-small" onclick="document.getElementById('mergePanel').style.display='none'">取消</button>
+                </div>
+            </div>
+
+            <!-- Join Panel -->
+            <div class="join-panel" id="joinPanel">
+                <h3>🔀 文件关联设置（JOIN）</h3>
+                <div class="alert alert-info" style="margin-bottom:10px;">
+                    关联 = 通过两个文件中某列的相同值，将两份数据横向拼接（类似 SQL JOIN）。
+                </div>
+                <div class="join-config">
+                    <label style="font-weight:600;">左表：</label>
+                    <select id="joinLeftFile" onchange="updateJoinColumnOptions('left')"></select>
+                    <label style="font-weight:600;">左表关联列：</label>
+                    <select id="joinLeftCol"></select>
+                </div>
+                <div class="join-config">
+                    <label style="font-weight:600;">右表：</label>
+                    <select id="joinRightFile" onchange="updateJoinColumnOptions('right')"></select>
+                    <label style="font-weight:600;">右表关联列：</label>
+                    <select id="joinRightCol"></select>
+                </div>
+                <div class="join-config">
+                    <label style="font-weight:600;">关联方式：</label>
+                    <select id="joinType">
+                        <option value="inner">内连接（INNER JOIN）- 只保留匹配的行</option>
+                        <option value="left">左连接（LEFT JOIN）- 保留左表所有行</option>
+                        <option value="full">全连接（FULL JOIN）- 保留所有行</option>
+                    </select>
+                </div>
+                <div style="margin-top:10px;">
+                    <button class="btn btn-success btn-small" onclick="executeJoin()">✅ 执行关联</button>
+                    <button class="btn btn-secondary btn-small" onclick="document.getElementById('joinPanel').style.display='none'">取消</button>
+                </div>
+            </div>
+
+            <!-- Settings (per file) -->
+            <div class="settings-panel" id="settingsPanel" style="display:none;">
+                <h3>⚙️ 当前文件读取设置：<span id="settingsFileName" style="color:#333;"></span></h3>
+                <div class="setting-row">
+                    <label class="setting-label">编码：</label>
+                    <select id="encodingSelect">
+                        <option value="UTF-8">UTF-8（推荐）</option>
+                        <option value="GBK">GBK（简体中文）</option>
+                        <option value="GB2312">GB2312</option>
+                        <option value="UTF-16">UTF-16</option>
+                        <option value="ISO-8859-1">ISO-8859-1</option>
+                    </select>
+                    <button class="btn btn-primary btn-tiny" onclick="reprocessCurrentFile()">🔄 重新解析</button>
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label">分隔符：</label>
+                    <select id="delimiterSelect">
+                        <option value="auto">自动检测</option>
+                        <option value=",">逗号 (,)</option>
+                        <option value=";">分号 (;)</option>
+                        <option value="\t">制表符 (Tab)</option>
+                        <option value="|">管道符 (|)</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                    <input type="text" id="customDelimiter" placeholder="自定义分隔符" style="display:none;width:80px;">
+                </div>
+                <div class="setting-row">
+                    <label class="setting-label">超长行处理：</label>
+                    <select id="longLineHandling">
+                        <option value="truncate">截断（保留前10000字符）</option>
+                        <option value="skip">跳过（忽略超长行）</option>
+                        <option value="keep">保留（不做处理，可能导致卡顿）</option>
+                    </select>
+                    <span style="font-size:12px;color:#888;">超过 10000 字符的行视为超长行</span>
+                </div>
+                <div class="encoding-status" id="encodingStatus"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tab-bar" id="tabBar" style="display:none;">
+                <button class="tab-btn active" onclick="switchTab('preview')">📋 数据预览</button>
+                <button class="tab-btn" onclick="switchTab('conditions')">🔍 条件筛选</button>
+                <button class="tab-btn" onclick="switchTab('calc')">📊 计算</button>
+            </div>
+
+            <!-- Tab: Preview -->
+            <div class="tab-content active" id="tab-preview">
+                <div id="dataInfoPanel" style="display:none;">
+                    <h2 class="section-title">📋 数据预览</h2>
+                    <div class="info-grid" style="margin-bottom:15px;" id="infoGrid"></div>
+                    <div>
+                        <h3 style="color:#667eea;margin-bottom:8px;font-size:14px;">📝 原始内容预览（前10行）</h3>
+                        <div class="raw-preview" id="rawPreview">请先上传文件</div>
+                    </div>
+                    <div class="alert alert-warning" id="longLineWarning" style="display:none;margin-top:10px;"></div>
+                </div>
+                <div class="table-container" id="tableContainer" style="display:none;">
+                    <table id="dataTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:10px;color:#888;font-size:12px;" id="previewNote"></div>
+            </div>
+
+            <!-- Tab: Conditions -->
+            <div class="tab-content" id="tab-conditions">
+                <div class="condition-builder">
+                    <h3 class="section-title">🔍 多条件筛选</h3>
+                    <div style="margin-bottom:12px;padding:8px;background:#e3f2fd;border-radius:6px;font-size:13px;">
+                        <strong>📖 查询类型：</strong>
+                        <span class="badge badge-csv">精确查询</span> 严格匹配 |
+                        <span class="badge badge-txt">模糊查询</span> 灵活匹配 |
+                        <span class="badge join-query">关联匹配</span> 跨文件关联
+                    </div>
+                    <div id="conditionsContainer"></div>
+                    <div class="condition-actions">
+                        <button class="btn btn-primary btn-small" onclick="addCondition('filter')">➕ 添加筛选条件</button>
+                        <button class="btn btn-warning btn-small" onclick="addCondition('join')">🔀 添加关联条件</button>
+                        <button class="btn btn-success btn-small" onclick="applyAllConditions()">✅ 应用所有条件</button>
+                        <button class="btn btn-secondary btn-small" onclick="clearAllConditions()">🗑️ 清除所有条件</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Calc -->
+            <div class="tab-content" id="tab-calc">
+                <div class="condition-builder">
+                    <h3 class="section-title">📊 数据计算</h3>
+                    <div class="condition-row">
+                        <label style="font-weight:600;">选择列：</label>
+                        <select id="calcColumn"><option value="">选择计算列...</option></select>
+                        <label style="font-weight:600;margin-left:15px;">操作：</label>
+                        <select id="calcOperation">
+                            <option value="sum">求和</option>
+                            <option value="avg">平均值</option>
+                            <option value="count">计数</option>
+                            <option value="count_distinct">去重计数</option>
+                            <option value="max">最大值</option>
+                            <option value="min">最小值</option>
+                        </select>
+                        <button class="btn btn-success btn-small" onclick="calculate()">📊 计算</button>
+                    </div>
+                </div>
+                <div class="results" id="results">
+                    <h3>📈 计算结果</h3>
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+
+            <!-- Download -->
+            <div class="download-section" id="downloadSection" style="display:none;margin-top:20px;">
+                <button class="btn btn-primary btn-small" onclick="downloadProcessed('xlsx')">📥 导出 Excel</button>
+                <button class="btn btn-success btn-small" onclick="downloadProcessed('csv')">📥 导出 CSV</button>
+                <button class="btn btn-secondary btn-small" onclick="downloadProcessed('txt')">📄 导出 TXT</button>
+                <button class="btn btn-secondary btn-small" onclick="resetData()">🔄 重置筛选</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ===== DATA MODEL =====
+// Each imported file is stored as:
+// { id, name, type, encoding, delimiter, headers:[], rawData:[], longLineCount, rawContent }
+let fileStore = []; // all imported files
+let fileCounter = 0;
+let selectedFileId = null; // currently selected file id
+let activeFileIds = []; // which files are "active" for merge/join result
+let mergedHeaders = [];
+let mergedData = []; // the merged/joined result (or single file data)
+let filteredData = [];
+let conditions = [];
+let conditionCounter = 0;
+let isMergedResult = false;
+
+// ===== UPLOAD =====
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+
+document.getElementById('delimiterSelect').addEventListener('change', function() {
+    document.getElementById('customDelimiter').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+function addMoreFiles() { fileInput.click(); }
+
+function handleFiles(files) {
+    if (!files || files.length === 0) return;
+    document.getElementById('loading').style.display = 'block';
+    
+    let pending = files.length;
+    let processed = 0;
+    
+    Array.from(files).forEach(file => {
+        processFileToStore(file, () => {
+            processed++;
+            if (processed === pending) {
+                document.getElementById('loading').style.display = 'none';
+                refreshUI();
+            }
+        });
+    });
+}
+
+function processFileToStore(fileObj, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const arrayBuffer = e.target.result;
+            let text;
+            let encoding = 'UTF-8';
+            
+            // Try UTF-8 first
+            text = new TextDecoder('utf-8').decode(arrayBuffer);
+            if (text.includes('\ufffd')) {
+                try {
+                    text = new TextDecoder('gbk').decode(arrayBuffer);
+                    encoding = 'GBK';
+                } catch(e2) {
+                    encoding = 'UTF-8';
+                }
+            }
+            
+            const ext = fileObj.name.toLowerCase().split('.').pop();
+            let fileType = ext === 'txt' ? 'txt' : ext === 'xlsx' || ext === 'xls' ? 'xlsx' : 'csv';
+            let headers = [];
+            let rawData = [];
+            let longLineCount = 0;
+            const LONG_LINE_THRESHOLD = 10000;
+            const longLineHandling = 'truncate'; // default for initial load
+            
+            if (fileType === 'xlsx') {
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[firstSheet];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                if (jsonData.length > 0) {
+                    headers = Object.keys(jsonData[0]);
+                    rawData = jsonData.map((row, i) => { row._id = i; row._sourceFile = fileObj.name; return row; });
+                }
+            } else {
+                // CSV or TXT
+                let delimiter = detectDelimiter(text);
+                const lines = text.split('\n');
+                
+                if (fileType === 'txt') {
+                    // For TXT, check if it looks like single-column
+                    const firstLineFields = parseCSVLine(lines[0] || '', delimiter);
+                    if (firstLineFields.length <= 1) {
+                        // Single column mode
+                        const dataLines = lines.filter(l => l.trim());
+                        headers = ['内容'];
+                        rawData = dataLines.map((line, i) => {
+                            const trimmed = line.trim();
+                            if (trimmed.length > LONG_LINE_THRESHOLD) {
+                                longLineCount++;
+                                return { _id: i, '内容': trimmed.substring(0, LONG_LINE_THRESHOLD) + '...[已截断]', _sourceFile: fileObj.name };
+                            }
+                            return { _id: i, '内容': trimmed, _sourceFile: fileObj.name };
+                        });
+                        delimiter = '（单列）';
+                    } else {
+                        headers = firstLineFields;
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i];
+                            if (!line.trim()) continue;
+                            if (line.length > LONG_LINE_THRESHOLD) {
+                                longLineCount++;
+                                if (longLineHandling === 'skip') continue;
+                                if (longLineHandling === 'truncate') {
+                                    const values = parseCSVLine(line.substring(0, LONG_LINE_THRESHOLD), delimiter);
+                                    const obj = { _id: rawData.length, _sourceFile: fileObj.name };
+                                    headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                                    rawData.push(obj);
+                                    continue;
+                                }
+                            }
+                            const values = parseCSVLine(line, delimiter);
+                            const obj = { _id: rawData.length, _sourceFile: fileObj.name };
+                            headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                            rawData.push(obj);
+                        }
+                    }
+                } else {
+                    // CSV
+                    headers = parseCSVLine(lines[0] || '', delimiter);
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (!line.trim()) continue;
+                        if (line.length > LONG_LINE_THRESHOLD) {
+                            longLineCount++;
+                            if (longLineHandling === 'skip') continue;
+                            if (longLineHandling === 'truncate') {
+                                const values = parseCSVLine(line.substring(0, LONG_LINE_THRESHOLD), delimiter);
+                                const obj = { _id: rawData.length, _sourceFile: fileObj.name };
+                                headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                                rawData.push(obj);
+                                continue;
+                            }
+                        }
+                        const values = parseCSVLine(line, delimiter);
+                        const obj = { _id: rawData.length, _sourceFile: fileObj.name };
+                        headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                        rawData.push(obj);
+                    }
+                }
+            }
+            
+            fileCounter++;
+            const fileEntry = {
+                id: fileCounter,
+                name: fileObj.name,
+                type: fileType,
+                encoding: encoding,
+                delimiter: typeof headers !== 'undefined' ? (fileType === 'xlsx' ? '内置' : (rawData._delimiter || '自动')) : '自动',
+                headers: headers,
+                rawData: rawData,
+                longLineCount: longLineCount,
+                rawContent: text.substring(0, 5000), // store first 5k for preview
+                arrayBuffer: arrayBuffer // keep for re-parse
+            };
+            
+            fileStore.push(fileEntry);
+            if (!selectedFileId) selectedFileId = fileEntry.id;
+            
+            callback();
+        } catch (error) {
+            alert('解析文件 ' + fileObj.name + ' 失败：' + error.message);
+            callback();
+        }
+    };
+    reader.onerror = () => { alert('读取文件失败'); callback(); };
+    reader.readAsArrayBuffer(fileObj);
+}
+
+// ===== UI REFRESH =====
+function refreshUI() {
+    renderFileList();
+    
+    const hasFiles = fileStore.length > 0;
+    document.getElementById('fileListPanel').style.display = hasFiles ? 'block' : 'none';
+    document.getElementById('settingsPanel').style.display = hasFiles ? 'block' : 'none';
+    document.getElementById('tabBar').style.display = hasFiles ? 'flex' : 'none';
+    document.getElementById('downloadSection').style.display = hasFiles ? 'flex' : 'none';
+    
+    // Show merge/join buttons when 2+ files
+    document.getElementById('btnShowMerge').style.display = fileStore.length >= 2 ? 'inline-block' : 'none';
+    document.getElementById('btnShowJoin').style.display = fileStore.length >= 2 ? 'inline-block' : 'none';
+    
+    if (hasFiles) {
+        loadFileToView(selectedFileId);
+    }
+}
+
+function renderFileList() {
+    const container = document.getElementById('fileListContainer');
+    container.innerHTML = '';
+    
+    fileStore.forEach(f => {
+        const icon = f.type === 'xlsx' ? '📗' : f.type === 'txt' ? '📄' : '📋';
+        const typeBadge = f.type === 'xlsx' ? 'badge-xlsx' : f.type === 'txt' ? 'badge-txt' : 'badge-csv';
+        const longLineBadge = f.longLineCount > 0 ? `<span class="badge badge-warn">⚠ ${f.longLineCount} 超长行</span>` : '';
+        const selected = f.id === selectedFileId ? 'selected' : '';
+        
+        container.innerHTML += `
+            <div class="file-card ${selected}" onclick="selectFile(${f.id})">
+                <div class="file-card-left">
+                    <div class="file-card-icon">${icon}</div>
+                    <div class="file-card-info">
+                        <div class="file-card-name" title="${f.name}">${f.name}</div>
+                        <div class="file-card-meta">${f.rawData.length} 行 · ${f.headers.length} 列 · ${f.encoding}</div>
+                        <div class="file-card-badges">
+                            <span class="badge ${typeBadge}">${f.type.toUpperCase()}</span>
+                            ${longLineBadge}
+                        </div>
+                    </div>
+                </div>
+                <div class="file-card-right">
+                    <button class="btn btn-danger btn-tiny" onclick="event.stopPropagation();removeFile(${f.id})">✕</button>
+                </div>
+            </div>`;
+    });
+}
+
+function selectFile(id) {
+    selectedFileId = id;
+    isMergedResult = false;
+    renderFileList();
+    loadFileToView(id);
+    
+    // Update settings
+    const f = getFile(id);
+    if (f) {
+        document.getElementById('settingsFileName').textContent = f.name;
+        document.getElementById('encodingSelect').value = f.encoding;
+    }
+}
+
+function removeFile(id) {
+    fileStore = fileStore.filter(f => f.id !== id);
+    if (selectedFileId === id) {
+        selectedFileId = fileStore.length > 0 ? fileStore[0].id : null;
+    }
+    isMergedResult = false;
+    refreshUI();
+}
+
+function removeAllFiles() {
+    if (!confirm('确定清除所有已导入的文件吗？')) return;
+    fileStore = [];
+    selectedFileId = null;
+    isMergedResult = false;
+    mergedData = [];
+    mergedHeaders = [];
+    refreshUI();
+}
+
+function getFile(id) { return fileStore.find(f => f.id === id); }
+
+// ===== LOAD FILE TO VIEW =====
+function loadFileToView(id) {
+    const f = getFile(id);
+    if (!f) return;
+    
+    mergedHeaders = f.headers;
+    mergedData = [...f.rawData];
+    filteredData = [...mergedData];
+    
+    // Info
+    const infoGrid = document.getElementById('infoGrid');
+    infoGrid.innerHTML = `
+        <div class="info-item"><div class="info-label">当前数据</div><div class="info-value">${isMergedResult ? '合并/关联结果' : f.name}</div></div>
+        <div class="info-item"><div class="info-label">总行数</div><div class="info-value" id="totalRows">${mergedData.length}</div></div>
+        <div class="info-item"><div class="info-label">列数</div><div class="info-value">${mergedHeaders.length}</div></div>
+        <div class="info-item"><div class="info-label">编码</div><div class="info-value">${f.encoding}</div></div>
+        <div class="info-item"><div class="info-label">预览</div><div class="info-value">前100行</div></div>
+        <div class="info-item"><div class="info-label">筛选后</div><div class="info-value" id="filteredRows">${filteredData.length}</div></div>
+    `;
+    
+    document.getElementById('dataInfoPanel').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'block';
+    
+    // Raw preview
+    document.getElementById('rawPreview').textContent = f.rawContent.split('\n').slice(0, 10).join('\n');
+    
+    // Long line warning
+    const warn = document.getElementById('longLineWarning');
+    if (f.longLineCount > 0) {
+        warn.style.display = 'block';
+        warn.innerHTML = `⚠️ 检测到 <strong>${f.longLineCount}</strong> 行超过 10000 字符，已自动截断。可在"文件读取设置"中修改处理方式。`;
+    } else {
+        warn.style.display = 'none';
+    }
+    
+    populateColumnSelectors();
+    displayData();
+    
+    // Reset conditions if needed
+    if (conditions.length === 0) addCondition('filter');
+}
+
+// ===== MERGE =====
+function showMergePanel() {
+    document.getElementById('mergePanel').style.display = 'block';
+}
+
+function executeMerge() {
+    if (fileStore.length < 2) { alert('至少需要2个文件才能合并'); return; }
+    
+    const mode = document.getElementById('mergeMode').value;
+    const addSource = document.getElementById('mergeAddSource').checked;
+    
+    // Collect all headers
+    let allHeaders = [];
+    fileStore.forEach(f => {
+        f.headers.forEach(h => {
+            if (!allHeaders.includes(h)) allHeaders.push(h);
+        });
+    });
+    
+    // For intersect mode, only keep common headers
+    if (mode === 'intersect') {
+        let commonHeaders = [...fileStore[0].headers];
+        for (let i = 1; i < fileStore.length; i++) {
+            commonHeaders = commonHeaders.filter(h => fileStore[i].headers.includes(h));
+        }
+        allHeaders = commonHeaders;
+    }
+    
+    if (addSource && !allHeaders.includes('__来源文件__')) {
+        allHeaders.push('__来源文件__');
+    }
+    
+    let resultData = [];
+    fileStore.forEach(f => {
+        f.rawData.forEach(row => {
+            const obj = { _id: resultData.length };
+            allHeaders.forEach(h => {
+                if (h === '__来源文件__') {
+                    obj[h] = f.name;
+                } else {
+                    obj[h] = row[h] !== undefined ? row[h] : '';
+                }
+            });
+            resultData.push(obj);
+        });
+    });
+    
+    mergedHeaders = allHeaders;
+    mergedData = resultData;
+    filteredData = [...mergedData];
+    isMergedResult = true;
+    selectedFileId = null;
+    
+    document.getElementById('mergePanel').style.display = 'none';
+    
+    // Show result
+    const infoGrid = document.getElementById('infoGrid');
+    infoGrid.innerHTML = `
+        <div class="info-item"><div class="info-label">当前数据</div><div class="info-value">🔗 合并结果</div></div>
+        <div class="info-item"><div class="info-label">合并文件数</div><div class="info-value">${fileStore.length}</div></div>
+        <div class="info-item"><div class="info-label">总行数</div><div class="info-value">${mergedData.length}</div></div>
+        <div class="info-item"><div class="info-label">列数</div><div class="info-value">${mergedHeaders.length}</div></div>
+        <div class="info-item"><div class="info-label">模式</div><div class="info-value">${mode === 'union' ? '并联' : '交集'}</div></div>
+        <div class="info-item"><div class="info-label">筛选后</div><div class="info-value" id="filteredRows">${filteredData.length}</div></div>
+    `;
+    
+    document.getElementById('dataInfoPanel').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'block';
+    document.getElementById('rawPreview').textContent = `[合并结果] ${fileStore.length} 个文件，共 ${mergedData.length} 行`;
+    document.getElementById('longLineWarning').style.display = 'none';
+    
+    populateColumnSelectors();
+    displayData();
+    renderFileList();
+    
+    alert(`合并完成！${fileStore.length} 个文件合并为 ${mergedData.length} 行、${mergedHeaders.length} 列`);
+}
+
+// ===== JOIN =====
+function showJoinPanel() {
+    const panel = document.getElementById('joinPanel');
+    panel.style.display = 'block';
+    
+    const leftSelect = document.getElementById('joinLeftFile');
+    const rightSelect = document.getElementById('joinRightFile');
+    leftSelect.innerHTML = '';
+    rightSelect.innerHTML = '';
+    
+    fileStore.forEach(f => {
+        leftSelect.innerHTML += `<option value="${f.id}">${f.name}</option>`;
+        rightSelect.innerHTML += `<option value="${f.id}">${f.name}</option>`;
+    });
+    
+    if (fileStore.length >= 2) {
+        rightSelect.value = fileStore[1].id;
+    }
+    
+    updateJoinColumnOptions('left');
+    updateJoinColumnOptions('right');
+}
+
+function updateJoinColumnOptions(side) {
+    const fileSelect = document.getElementById(side === 'left' ? 'joinLeftFile' : 'joinRightFile');
+    const colSelect = document.getElementById(side === 'left' ? 'joinLeftCol' : 'joinRightCol');
+    const f = getFile(Number(fileSelect.value));
+    if (!f) return;
+    
+    colSelect.innerHTML = '';
+    f.headers.forEach(h => {
+        colSelect.innerHTML += `<option value="${h}">${h}</option>`;
+    });
+}
+
+function executeJoin() {
+    const leftFile = getFile(Number(document.getElementById('joinLeftFile').value));
+    const rightFile = getFile(Number(document.getElementById('joinRightFile').value));
+    const leftCol = document.getElementById('joinLeftCol').value;
+    const rightCol = document.getElementById('joinRightCol').value;
+    const joinType = document.getElementById('joinType').value;
+    
+    if (!leftFile || !rightFile) { alert('请选择两个文件'); return; }
+    if (leftFile.id === rightFile.id) { alert('请选择不同的文件进行关联'); return; }
+    
+    // Build right lookup
+    const rightLookup = {};
+    rightFile.rawData.forEach(row => {
+        const key = String(row[rightCol] || '');
+        if (!rightLookup[key]) rightLookup[key] = [];
+        rightLookup[key].push(row);
+    });
+    
+    // Build right headers (prefix with filename to avoid collision)
+    const rightHeaders = rightFile.headers.filter(h => h !== rightCol).map(h => {
+        // If header exists in left, prefix with right filename
+        if (leftFile.headers.includes(h) && h !== leftCol) {
+            return `${rightFile.name}→${h}`;
+        }
+        return h;
+    });
+    
+    const allHeaders = [...leftFile.headers, ...rightHeaders];
+    
+    let resultData = [];
+    const matchedRightKeys = new Set();
+    
+    // Process left rows
+    leftFile.rawData.forEach(leftRow => {
+        const key = String(leftRow[leftCol] || '');
+        const rightMatches = rightLookup[key] || [];
+        
+        if (rightMatches.length > 0) {
+            matchedRightKeys.add(key);
+            rightMatches.forEach(rightRow => {
+                const obj = { _id: resultData.length };
+                leftFile.headers.forEach(h => obj[h] = leftRow[h] !== undefined ? leftRow[h] : '');
+                rightHeaders.forEach((rh, i) => {
+                    const origH = rightFile.headers.filter(h => h !== rightCol)[i];
+                    obj[rh] = rightRow[origH] !== undefined ? rightRow[origH] : '';
+                });
+                resultData.push(obj);
+            });
+        } else if (joinType === 'left' || joinType === 'full') {
+            const obj = { _id: resultData.length };
+            leftFile.headers.forEach(h => obj[h] = leftRow[h] !== undefined ? leftRow[h] : '');
+            rightHeaders.forEach(rh => obj[rh] = '');
+            resultData.push(obj);
+        }
+    });
+    
+    // Full join: add unmatched right rows
+    if (joinType === 'full') {
+        rightFile.rawData.forEach(rightRow => {
+            const key = String(rightRow[rightCol] || '');
+            if (!matchedRightKeys.has(key)) {
+                const obj = { _id: resultData.length };
+                leftFile.headers.forEach(h => obj[h] = h === leftCol ? key : '');
+                rightHeaders.forEach((rh, i) => {
+                    const origH = rightFile.headers.filter(h => h !== rightCol)[i];
+                    obj[rh] = rightRow[origH] !== undefined ? rightRow[origH] : '';
+                });
+                resultData.push(obj);
+            }
+        });
+    }
+    
+    mergedHeaders = allHeaders;
+    mergedData = resultData;
+    filteredData = [...mergedData];
+    isMergedResult = true;
+    
+    document.getElementById('joinPanel').style.display = 'none';
+    
+    const joinLabel = joinType === 'inner' ? '内连接' : joinType === 'left' ? '左连接' : '全连接';
+    const infoGrid = document.getElementById('infoGrid');
+    infoGrid.innerHTML = `
+        <div class="info-item"><div class="info-label">当前数据</div><div class="info-value">🔀 关联结果</div></div>
+        <div class="info-item"><div class="info-label">左表</div><div class="info-value">${leftFile.name} (${leftCol})</div></div>
+        <div class="info-item"><div class="info-label">右表</div><div class="info-value">${rightFile.name} (${rightCol})</div></div>
+        <div class="info-item"><div class="info-label">关联方式</div><div class="info-value">${joinLabel}</div></div>
+        <div class="info-item"><div class="info-label">总行数</div><div class="info-value">${mergedData.length}</div></div>
+        <div class="info-item"><div class="info-label">列数</div><div class="info-value">${mergedHeaders.length}</div></div>
+    `;
+    
+    document.getElementById('dataInfoPanel').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'block';
+    document.getElementById('rawPreview').textContent = `[关联结果] ${leftFile.name} ←${joinLabel}→ ${rightFile.name}，共 ${mergedData.length} 行`;
+    document.getElementById('longLineWarning').style.display = 'none';
+    
+    populateColumnSelectors();
+    displayData();
+    
+    alert(`关联完成！${joinLabel}：${mergedData.length} 行、${mergedHeaders.length} 列`);
+}
+
+// ===== REPROCESS =====
+function reprocessCurrentFile() {
+    const f = getFile(selectedFileId);
+    if (!f) { alert('请先选择一个文件'); return; }
+    
+    const encoding = document.getElementById('encodingSelect').value;
+    let delimiter = document.getElementById('delimiterSelect').value;
+    if (delimiter === 'custom') {
+        delimiter = document.getElementById('customDelimiter').value;
+        if (!delimiter) { alert('请输入自定义分隔符'); return; }
+    }
+    const longLineHandling = document.getElementById('longLineHandling').value;
+    
+    if (f.type === 'xlsx') {
+        alert('Excel 文件无需调整编码和分隔符');
+        return;
+    }
+    
+    // Re-decode
+    let text;
+    try {
+        if (encoding === 'UTF-8') text = new TextDecoder('utf-8').decode(f.arrayBuffer);
+        else if (encoding === 'GBK' || encoding === 'GB2312') text = new TextDecoder('gbk').decode(f.arrayBuffer);
+        else if (encoding === 'UTF-16') text = new TextDecoder('utf-16').decode(f.arrayBuffer);
+        else text = new TextDecoder('iso-8859-1').decode(f.arrayBuffer);
+        
+        showEncodingStatus('success', `✅ 使用 ${encoding} 编码成功解码`);
+    } catch(e) {
+        showEncodingStatus('error', '解码失败：' + e.message);
+        return;
+    }
+    
+    if (delimiter === 'auto') delimiter = detectDelimiter(text);
+    
+    const lines = text.split('\n');
+    let headers = [];
+    let rawData = [];
+    let longLineCount = 0;
+    const THRESHOLD = 10000;
+    
+    if (f.type === 'txt') {
+        const firstFields = parseCSVLine(lines[0] || '', delimiter);
+        if (firstFields.length <= 1) {
+            headers = ['内容'];
+            rawData = lines.filter(l => l.trim()).map((line, i) => {
+                const trimmed = line.trim();
+                if (trimmed.length > THRESHOLD) {
+                    longLineCount++;
+                    if (longLineHandling === 'skip') return null;
+                    return { _id: i, '内容': trimmed.substring(0, THRESHOLD) + '...[已截断]', _sourceFile: f.name };
+                }
+                return { _id: i, '内容': trimmed, _sourceFile: f.name };
+            }).filter(Boolean);
+        } else {
+            headers = firstFields;
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+                if (line.length > THRESHOLD) {
+                    longLineCount++;
+                    if (longLineHandling === 'skip') continue;
+                    if (longLineHandling === 'truncate') {
+                        const values = parseCSVLine(line.substring(0, THRESHOLD), delimiter);
+                        const obj = { _id: rawData.length, _sourceFile: f.name };
+                        headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                        rawData.push(obj); continue;
+                    }
+                }
+                const values = parseCSVLine(line, delimiter);
+                const obj = { _id: rawData.length, _sourceFile: f.name };
+                headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                rawData.push(obj);
+            }
+        }
+    } else {
+        headers = parseCSVLine(lines[0] || '', delimiter);
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (!line.trim()) continue;
+            if (line.length > THRESHOLD) {
+                longLineCount++;
+                if (longLineHandling === 'skip') continue;
+                if (longLineHandling === 'truncate') {
+                    const values = parseCSVLine(line.substring(0, THRESHOLD), delimiter);
+                    const obj = { _id: rawData.length, _sourceFile: f.name };
+                    headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+                    rawData.push(obj); continue;
+                }
+            }
+            const values = parseCSVLine(line, delimiter);
+            const obj = { _id: rawData.length, _sourceFile: f.name };
+            headers.forEach((h, j) => obj[h] = values[j] !== undefined ? values[j] : '');
+            rawData.push(obj);
+        }
+    }
+    
+    f.encoding = encoding;
+    f.delimiter = delimiter;
+    f.headers = headers;
+    f.rawData = rawData;
+    f.longLineCount = longLineCount;
+    f.rawContent = text.substring(0, 5000);
+    
+    isMergedResult = false;
+    loadFileToView(f.id);
+    renderFileList();
+}
+
+function showEncodingStatus(type, message) {
+    const s = document.getElementById('encodingStatus');
+    s.style.display = 'block';
+    s.className = 'encoding-status ' + type;
+    s.textContent = message;
+}
+
+// ===== TABS =====
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+}
+
+// ===== HELPERS =====
+function detectDelimiter(content) {
+    const firstLine = content.split('\n')[0];
+    const delimiters = [',', ';', '\t', '|'];
+    let maxCount = 0, detected = ',';
+    delimiters.forEach(d => {
+        const count = (firstLine.match(new RegExp(escapeRegExp(d), 'g')) || []).length;
+        if (count > maxCount) { maxCount = count; detected = d; }
+    });
+    return detected;
+}
+
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function parseCSVLine(line, delimiter) {
+    const result = [];
+    let current = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+            if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+            else inQuotes = !inQuotes;
+        } else if (c === delimiter && !inQuotes) {
+            result.push(current.trim()); current = '';
+        } else current += c;
+    }
+    result.push(current.trim());
+    return result;
+}
+
+// ===== DISPLAY =====
+function displayData() {
+    const tableHead = document.getElementById('tableHead');
+    const tableBody = document.getElementById('tableBody');
+    
+    const displayHeaders = mergedHeaders.filter(h => !h.startsWith('_'));
+    
+    tableHead.innerHTML = '<tr>' + displayHeaders.map(h => {
+        const isSource = h === '__来源文件__';
+        return `<th class="${isSource ? 'from-file' : ''}">${h}</th>`;
+    }).join('') + '</tr>';
+    
+    const displayRows = filteredData.slice(0, 100);
+    tableBody.innerHTML = displayRows.map(row =>
+        '<tr>' + displayHeaders.map(h => `<td title="${String(row[h]||'').substring(0,200)}">${row[h] !== undefined ? row[h] : ''}</td>`).join('') + '</tr>'
+    ).join('');
+    
+    document.getElementById('previewNote').textContent = 
+        filteredData.length > 100 ? `显示前 100 行，共 ${filteredData.length} 行` : `共 ${filteredData.length} 行`;
+    
+    const fr = document.getElementById('filteredRows');
+    if (fr) fr.textContent = filteredData.length;
+}
+
+function populateColumnSelectors() {
+    const calcCol = document.getElementById('calcColumn');
+    calcCol.innerHTML = '<option value="">选择计算列...</option>';
+    mergedHeaders.filter(h => !h.startsWith('_')).forEach(h => {
+        calcCol.innerHTML += `<option value="${h}">${h}</option>`;
+    });
+}
+
+// ===== CONDITIONS =====
+function addCondition(type = 'filter') {
+    conditionCounter++;
+    const id = conditionCounter;
+    const isJoin = type === 'join';
+    const logic = conditions.length === 0 ? '' : 'AND';
+    
+    let html = `
+        <div class="condition-item" id="condition-${id}">
+            <div class="condition-header">
+                <span class="condition-number">${isJoin ? '🔀 关联条件' : '条件'} ${id}</span>
+                <div>
+                    <span class="query-type-label ${isJoin ? 'join-query' : 'fuzzy-query'}">${isJoin ? '关联匹配' : '模糊查询'}</span>
+                    <button class="btn btn-danger btn-tiny" onclick="removeCondition(${id})">✕</button>
+                </div>
+            </div>`;
+    
+    if (conditions.length > 0) {
+        html += `
+            <div class="condition-row-logic">
+                <span class="logic-label">逻辑：</span>
+                <div class="logic-toggle">
+                    <button class="logic-btn ${logic === 'AND' ? 'active' : ''}" onclick="setLogic(${id},'AND',this)">AND（且）</button>
+                    <button class="logic-btn ${logic === 'OR' ? 'active' : ''}" onclick="setLogic(${id},'OR',this)">OR（或）</button>
+                </div>
+            </div>`;
+    }
+    
+    if (isJoin) {
+        // Join condition: select two files and their columns
+        html += `
+            <div class="condition-row">
+                <label style="font-weight:600;font-size:13px;">文件A：</label>
+                <select id="cond-joinFileA-${id}" onchange="updateCondJoinCols(${id},'A')">
+                    <option value="">选择文件...</option>
+                    ${fileStore.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}
+                </select>
+                <label style="font-weight:600;font-size:13px;">关联列：</label>
+                <select id="cond-joinColA-${id}"><option value="">选择列...</option></select>
+            </div>
+            <div class="condition-row">
+                <label style="font-weight:600;font-size:13px;">文件B：</label>
+                <select id="cond-joinFileB-${id}" onchange="updateCondJoinCols(${id},'B')">
+                    <option value="">选择文件...</option>
+                    ${fileStore.map(f => `<option value="${f.id}">${f.name}</option>`).join('')}
+                </select>
+                <label style="font-weight:600;font-size:13px;">关联列：</label>
+                <select id="cond-joinColB-${id}"><option value="">选择列...</option></select>
+            </div>`;
+    } else {
+        html += `
+            <div class="condition-row">
+                <select id="conditionColumn-${id}">
+                    <option value="">选择列...</option>
+                    ${mergedHeaders.filter(h => !h.startsWith('_')).map(h => `<option value="${h}">${h}</option>`).join('')}
+                </select>
+                <select id="conditionOperator-${id}" onchange="updateQueryTypeLabel(${id})">
+                    <optgroup label="📍 精确查询">
+                        <option value="=">=（等于）</option>
+                        <option value="!=">≠（不等于）</option>
+                        <option value=">">>（大于）</option>
+                        <option value="<"><（小于）</option>
+                        <option value=">=">≥（大于等于）</option>
+                        <option value="<=">≤（小于等于）</option>
+                        <option value="exact_match">精确匹配（区分大小写）</option>
+                    </optgroup>
+                    <optgroup label="🔍 模糊查询">
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="starts_with">以...开头</option>
+                        <option value="ends_with">以...结尾</option>
+                        <option value="regex">正则表达式</option>
+                    </optgroup>
+                </select>
+                <input type="text" id="conditionValue-${id}" placeholder="输入条件值">
+            </div>`;
+    }
+    
+    html += '</div>';
+    document.getElementById('conditionsContainer').insertAdjacentHTML('beforeend', html);
+    
+    conditions.push({ id, type, logic, column: '', operator: 'contains', value: '' });
+}
+
+function updateCondJoinCols(condId, side) {
+    const fileSelect = document.getElementById(`cond-joinFile${side}-${condId}`);
+    const colSelect = document.getElementById(`cond-joinCol${side}-${condId}`);
+    const f = getFile(Number(fileSelect.value));
+    if (!f) return;
+    colSelect.innerHTML = '<option value="">选择列...</option>';
+    f.headers.forEach(h => { colSelect.innerHTML += `<option value="${h}">${h}</option>`; });
+}
+
+function getQueryType(operator) {
+    return ['=', '!=', '>', '<', '>=', '<=', 'exact_match'].includes(operator) ? 'exact' : 'fuzzy';
+}
+
+function updateQueryTypeLabel(condId) {
+    const op = document.getElementById(`conditionOperator-${condId}`).value;
+    const type = getQueryType(op);
+    const label = document.querySelector(`#condition-${condId} .query-type-label`);
+    if (label) {
+        label.className = `query-type-label ${type === 'exact' ? 'exact-query' : 'fuzzy-query'}`;
+        label.textContent = type === 'exact' ? '精确查询' : '模糊查询';
+    }
+}
+
+function removeCondition(id) {
+    const el = document.getElementById(`condition-${id}`);
+    if (el) el.remove();
+    conditions = conditions.filter(c => c.id !== id);
+}
+
+function setLogic(id, logic, btn) {
+    const div = document.getElementById(`condition-${id}`);
+    div.querySelectorAll('.logic-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const c = conditions.find(c => c.id === id);
+    if (c) c.logic = logic;
+}
+
+function applyAllConditions() {
+    // Separate filter conditions and join conditions
+    const filterConds = [];
+    const joinConds = [];
+    
+    conditions.forEach(c => {
+        if (c.type === 'join') {
+            const fileA = Number(document.getElementById(`cond-joinFileA-${c.id}`).value);
+            const colA = document.getElementById(`cond-joinColA-${c.id}`).value;
+            const fileB = Number(document.getElementById(`cond-joinFileB-${c.id}`).value);
+            const colB = document.getElementById(`cond-joinColB-${c.id}`).value;
+            if (!fileA || !fileB || !colA || !colB) {
+                alert('请完成关联条件的设置');
+                return;
+            }
+            joinConds.push({ ...c, fileA, colA, fileB, colB });
+        } else {
+            c.column = document.getElementById(`conditionColumn-${c.id}`).value;
+            c.operator = document.getElementById(`conditionOperator-${c.id}`).value;
+            c.value = document.getElementById(`conditionValue-${c.id}`).value;
+            if (!c.column || !c.value) {
+                alert('请填写所有筛选条件的列和条件值');
+                return;
+            }
+            filterConds.push(c);
+        }
+    });
+    
+    // Process join conditions first
+    if (joinConds.length > 0) {
+        processJoinConditions(joinConds);
+    }
+    
+    // Then apply filter conditions
+    if (filterConds.length > 0) {
+        filteredData = mergedData.filter(row => {
+            let result = evaluateCondition(row, filterConds[0]);
+            for (let i = 1; i < filterConds.length; i++) {
+                const c = filterConds[i];
+                const r = evaluateCondition(row, c);
+                if (c.logic === 'AND') result = result && r;
+                else result = result || r;
+            }
+            return result;
+        });
+    } else if (joinConds.length === 0) {
+        filteredData = [...mergedData];
+    }
+    
+    displayData();
+    alert(`筛选完成！共 ${filteredData.length} 行数据`);
+}
+
+function processJoinConditions(joinConds) {
+    // Apply each join condition as a filter: keep rows where the join key exists in the other file
+    joinConds.forEach(jc => {
+        const fileA = getFile(jc.fileA);
+        const fileB = getFile(jc.fileB);
+        if (!fileA || !fileB) return;
+        
+        // Build set of keys from fileB's join column
+        const bKeys = new Set(fileB.rawData.map(row => String(row[jc.colB] || '')));
+        
+        // Filter mergedData: keep rows that came from fileA and have matching key in fileB
+        // OR came from fileB
+        filteredData = mergedData.filter(row => {
+            // If this row has the join column from fileA side
+            if (row[jc.colA] !== undefined) {
+                return bKeys.has(String(row[jc.colA] || ''));
+            }
+            return true; // Keep rows that don't have the column (from other files)
+        });
+    });
+    
+    mergedData = filteredData;
+}
+
+function evaluateCondition(row, condition) {
+    const cellValue = String(row[condition.column] || '');
+    const cv = condition.value;
+    switch(condition.operator) {
+        case '=': return cellValue == cv;
+        case '!=': return cellValue != cv;
+        case '>': return Number(cellValue) > Number(cv);
+        case '<': return Number(cellValue) < Number(cv);
+        case '>=': return Number(cellValue) >= Number(cv);
+        case '<=': return Number(cellValue) <= Number(cv);
+        case 'exact_match': return cellValue === cv;
+        case 'contains': return cellValue.toLowerCase().includes(cv.toLowerCase());
+        case 'not_contains': return !cellValue.toLowerCase().includes(cv.toLowerCase());
+        case 'starts_with': return cellValue.toLowerCase().startsWith(cv.toLowerCase());
+        case 'ends_with': return cellValue.toLowerCase().endsWith(cv.toLowerCase());
+        case 'regex':
+            try { return new RegExp(cv, 'i').test(cellValue); }
+            catch(e) { alert('正则错误：' + e.message); return true; }
+        default: return true;
+    }
+}
+
+function clearAllConditions() {
+    conditions = [];
+    conditionCounter = 0;
+    document.getElementById('conditionsContainer').innerHTML = '';
+    filteredData = [...mergedData];
+    displayData();
+    addCondition('filter');
+}
+
+// ===== CALC =====
+function calculate() {
+    const column = document.getElementById('calcColumn').value;
+    const operation = document.getElementById('calcOperation').value;
+    if (!column) { alert('请选择计算列'); return; }
+    
+    const values = filteredData.map(row => Number(row[column])).filter(v => !isNaN(v));
+    
+    if (values.length === 0 && operation !== 'count' && operation !== 'count_distinct') {
+        alert('没有可计算的数字数据'); return;
+    }
+    
+    let resultText = '';
+    switch(operation) {
+        case 'sum': resultText = `求和：${values.reduce((a,b) => a+b, 0).toFixed(2)}`; break;
+        case 'avg': resultText = `平均值：${(values.reduce((a,b) => a+b, 0) / values.length).toFixed(2)}`; break;
+        case 'count': resultText = `计数：${filteredData.length}`; break;
+        case 'count_distinct': resultText = `去重计数：${new Set(filteredData.map(r => r[column])).size}`; break;
+        case 'max': resultText = `最大值：${Math.max(...values)}`; break;
+        case 'min': resultText = `最小值：${Math.min(...values)}`; break;
+    }
+    
+    document.getElementById('resultContent').innerHTML = `
+        <p><strong>列：</strong>${column} | <strong>操作：</strong>${operation}</p>
+        <p style="font-size:20px;margin-top:10px;"><strong>${resultText}</strong></p>
+        <p style="margin-top:5px;color:#888;">有效数字行：${values.length} | 总行数：${filteredData.length}</p>
+    `;
+    document.getElementById('results').style.display = 'block';
+}
+
+// ===== DOWNLOAD =====
+function downloadProcessed(format) {
+    const displayHeaders = mergedHeaders.filter(h => !h.startsWith('_'));
+    const data = filteredData;
+    
+    if (format === 'xlsx') {
+        const ws = XLSX.utils.json_to_sheet(data.map(row => {
+            const obj = {};
+            displayHeaders.forEach(h => obj[h] = row[h] !== undefined ? row[h] : '');
+            return obj;
+        }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Processed');
+        XLSX.writeFile(wb, 'processed_data.xlsx');
+    } else if (format === 'csv') {
+        const csv = [displayHeaders.join(','), ...data.map(row => displayHeaders.map(h => `"${(row[h]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'processed_data.csv';
+        link.click();
+    } else if (format === 'txt') {
+        const txt = [displayHeaders.join('\t'), ...data.map(row => displayHeaders.map(h => (row[h]||'').toString()).join('\t'))].join('\n');
+        const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'processed_data.txt';
+        link.click();
+    }
+}
+
+function resetData() {
+    filteredData = [...mergedData];
+    displayData();
+    document.getElementById('results').style.display = 'none';
+    clearAllConditions();
+}
+</script>
+</body>
+</html>
