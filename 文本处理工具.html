@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本处理工具 - 热心市民张三丰的工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            color: rgba(255,255,255,0.9);
+        }
+        .header {
+            background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.15));
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 20px 0;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            font-size: 32px;
+            text-decoration: none;
+        }
+        .logo-text {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .logo-text span {
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            font-weight: 400;
+        }
+        .back-link {
+            color: rgba(102,126,234,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: rgba(102,126,234,1); }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-desc {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .tab:hover {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+        }
+        .tab.active {
+            background: rgba(102,126,234,0.2);
+            border-color: rgba(102,126,234,0.4);
+            color: rgba(102,126,234,1);
+        }
+
+        .panel {
+            display: none;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .panel.active { display: block; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-label {
+            display: block;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+        textarea, input[type="text"], select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        textarea:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: rgba(102,126,234,0.5);
+        }
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        textarea.small { min-height: 80px; }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .row { grid-template-columns: 1fr; }
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.8);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.12);
+        }
+        .btn-success {
+            background: rgba(76,175,80,0.2);
+            color: #4caf50;
+        }
+        .btn-success:hover {
+            background: rgba(76,175,80,0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .stat-item {
+            color: rgba(255,255,255,0.5);
+        }
+        .stat-item span {
+            color: rgba(102,126,234,1);
+            font-weight: 600;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        .checkbox-item span {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .result-area {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 6px;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: rgba(102,126,234,0.3);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.3);
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .encoding-select {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .encoding-select select {
+            width: auto;
+            min-width: 120px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            background: rgba(76,175,80,0.9);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .regex-flags {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .regex-flags label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: rgba(102,126,234,0.5);
+            background: rgba(102,126,234,0.05);
+        }
+        .file-drop-zone-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .file-drop-zone-text {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+        }
+        .file-drop-zone-text span {
+            color: rgba(102,126,234,0.8);
+        }
+        #fileInput { display: none; }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .file-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(102,126,234,0.15);
+            border-radius: 20px;
+            font-size: 12px;
+            color: rgba(102,126,234,0.9);
+        }
+        .file-tag .remove {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .file-tag .remove:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="index.html" class="logo">🧰</a>
+                <div class="logo-text">
+                    文本处理工具
+                    <span>热心市民张三丰的工具箱</span>
+                </div>
+            </div>
+            <a href="index.html" class="back-link">← 返回工具箱</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-title">📝 文本处理工具</div>
+        <div class="page-desc">批量文本替换、去重、格式转换、编码转换、正则提取 — 完全离线运行</div>
+
+        <div class="tabs">
+            <div class="tab active" data-panel="replace">查找替换</div>
+            <div class="tab" data-panel="dedup">去重工具</div>
+            <div class="tab" data-panel="format">格式转换</div>
+            <div class="tab" data-panel="encoding">编码转换</div>
+            <div class="tab" data-panel="regex">正则提取</div>
+            <div class="tab" data-panel="batch">批量处理</div>
+        </div>
+
+        <!-- 查找替换 -->
+        <div class="panel active" id="replace">
+            <div class="row">
+                <div class="input-group">
+                    <label class="input-label">原始文本</label>
+                    <textarea id="replaceInput" placeholder="在此输入或粘贴文本..."></textarea>
+                    <div class="stats-bar">
+                        <div class="stat-item">字符数: <span id="replaceCharCount">0</span></div>
+                        <div class="stat-item">行数: <span id="replaceLineCount">0</span></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">查找内容</label>
+                    <input type="text" id="findText" placeholder="要查找的文本">
+                    
+                    <label class="input-label" style="margin-top: 16px;">替换为</label>
+                    <input type="text" id="replaceText" placeholder="替换后的文本">
+                    
+                    <div class="checkbox-group" style="margin-top: 16px;">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="caseSensitive">
+                            <span>区分大小写</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="wholeWord">
+                            <span>全字匹配</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="useRegex">
+                            <span>使用正则</span>
+                        </label>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="doReplace()">执行替换</button>
+                        <button class="btn btn-secondary" onclick="clearReplace()">清空</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group result-area">
+                <label class="input-label">替换结果</label>
+                <button class="copy-btn" onclick="copyResult('replaceOutput')">复制</button>
+                <textarea id="replaceOutput" readonly placeholder="替换后的文本将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <!-- 去重工具 -->
+        <div class="panel" id="dedup">
+            <div class="row">
+                <div class="input-group">
+                    <label class="input-label">输入文本（每行一条）</label>
+                    <textarea id="dedupInput" placeholder="在此输入或粘贴文本，每行一条..."></textarea>
+                    <div class="stats-bar">
+                        <div class="stat-item">总行数: <span id="dedupTotalCount">0</span></div>
+                        <div class="stat-item">唯一行数: <span id="dedupUniqueCount">0</span></div>
+                        <div class="stat-item">重复行数: <span id="dedupDupCount">0</span></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">去重选项</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="ignoreCase" checked>
+                            <span>忽略大小写</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="ignoreSpace" checked>
+                            <span>忽略首尾空格</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="keepFirst" checked>
+                            <span>保留首次出现</span>
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="showRemoved">
+                            <span>显示被删除的重复项</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="sortResult">
+                            <span>结果排序</span>
+                        </label>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="doDedup()">开始去重</button>
+                        <button class="btn btn-secondary" onclick="clearDedup()">清空</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group result-area">
+                <label class="input-label">去重结果</label>
+                <button class="copy-btn" onclick="copyResult('dedupOutput')">复制</button>
+                <textarea id="dedupOutput" readonly placeholder="去重后的文本将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <!-- 格式转换 -->
+        <div class="panel" id="format">
+            <div class="row">
+                <div class="input-group">
+                    <label class="input-label">输入文本</label>
+                    <textarea id="formatInput" placeholder="在此输入或粘贴文本..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">转换选项</label>
+                    <div class="btn-group" style="flex-direction: column; align-items: flex-start;">
+                        <button class="btn btn-secondary" onclick="toUpperCase()">🔠 转大写</button>
+                        <button class="btn btn-secondary" onclick="toLowerCase()">🔡 转小写</button>
+                        <button class="btn btn-secondary" onclick="toTitleCase()">📰 首字母大写</button>
+                        <button class="btn btn-secondary" onclick="removeExtraSpace()">🧹 删除多余空格</button>
+                        <button class="btn btn-secondary" onclick="removeEmptyLines()">📄 删除空行</button>
+                        <button class="btn btn-secondary" onclick="trimLines()">✂️ 删除行首尾空格</button>
+                        <button class="btn btn-secondary" onclick="addLineNumbers()">🔢 添加行号</button>
+                        <button class="btn btn-secondary" onclick="reverseLines()">🔄 行顺序反转</button>
+                        <button class="btn btn-secondary" onclick="sortLines()">📊 按字母排序</button>
+                        <button class="btn btn-secondary" onclick="removePunctuation()">❌ 移除标点</button>
+                    </div>
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="clearFormat()">清空</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group result-area">
+                <label class="input-label">转换结果</label>
+                <button class="copy-btn" onclick="copyResult('formatOutput')">复制</button>
+                <textarea id="formatOutput" readonly placeholder="转换后的文本将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <!-- 编码转换 -->
+        <div class="panel" id="encoding">
+            <div class="row">
+                <div class="input-group">
+                    <label class="input-label">输入文本</label>
+                    <textarea id="encodingInput" placeholder="在此输入或粘贴文本..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">编码转换</label>
+                    <div class="encoding-select">
+                        <span>源编码:</span>
+                        <select id="sourceEncoding">
+                            <option value="utf8">UTF-8</option>
+                            <option value="gbk">GBK</option>
+                            <option value="gb2312">GB2312</option>
+                            <option value="big5">Big5</option>
+                            <option value="unicode">Unicode</option>
+                            <option value="base64">Base64</option>
+                            <option value="url">URL编码</option>
+                            <option value="html">HTML实体</option>
+                        </select>
+                    </div>
+                    <div class="encoding-select">
+                        <span>目标编码:</span>
+                        <select id="targetEncoding">
+                            <option value="utf8" selected>UTF-8</option>
+                            <option value="gbk">GBK</option>
+                            <option value="gb2312">GB2312</option>
+                            <option value="big5">Big5</option>
+                            <option value="unicode">Unicode</option>
+                            <option value="base64">Base64</option>
+                            <option value="url">URL编码</option>
+                            <option value="html">HTML实体</option>
+                            <option value="hex">十六进制</option>
+                            <option value="binary">二进制</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="doEncoding()">转换编码</button>
+                        <button class="btn btn-secondary" onclick="clearEncoding()">清空</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-group result-area">
+                <label class="input-label">转换结果</label>
+                <button class="copy-btn" onclick="copyResult('encodingOutput')">复制</button>
+                <textarea id="encodingOutput" readonly placeholder="编码转换后的结果将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <!-- 正则提取 -->
+        <div class="panel" id="regex">
+            <div class="row">
+                <div class="input-group">
+                    <label class="input-label">输入文本</label>
+                    <textarea id="regexInput" placeholder="在此输入或粘贴文本..."></textarea>
+                    <div class="stats-bar">
+                        <div class="stat-item">匹配数: <span id="regexMatchCount">0</span></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">正则表达式</label>
+                    <input type="text" id="regexPattern" placeholder="输入正则表达式，如: \d+ 匹配数字">
+                    <div class="regex-flags">
+                        <label><input type="checkbox" id="flagGlobal" checked> g (全局)</label>
+                        <label><input type="checkbox" id="flagIgnoreCase"> i (忽略大小写)</label>
+                        <label><input type="checkbox" id="flagMultiline"> m (多行)</label>
+                        <label><input type="checkbox" id="flagDotAll"> s (点匹配换行)</label>
+                    </div>
+                    <label class="input-label" style="margin-top: 16px;">替换为（可选）</label>
+                    <input type="text" id="regexReplace" placeholder="留空则提取匹配项，填写则执行替换">
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="doRegex()">执行匹配</button>
+                        <button class="btn btn-secondary" onclick="clearRegex()">清空</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 12px; background: rgba(102,126,234,0.1); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.5);">
+                        <strong style="color: rgba(102,126,234,0.8);">常用正则示例：</strong><br>
+                        <code>\d+</code> - 数字 &nbsp;|&nbsp;
+                        <code>[a-zA-Z]+</code> - 字母 &nbsp;|&nbsp;
+                        <code>\w+@\w+\.\w+</code> - 邮箱 &nbsp;|&nbsp;
+                        <code>https?://[^\s]+</code> - URL
+                    </div>
+                </div>
+            </div>
+            <div class="input-group result-area">
+                <label class="input-label">匹配结果</label>
+                <button class="copy-btn" onclick="copyResult('regexOutput')">复制</button>
+                <textarea id="regexOutput" readonly placeholder="匹配结果将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <!-- 批量处理 -->
+        <div class="panel" id="batch">
+            <div class="file-drop-zone" id="dropZone">
+                <div class="file-drop-zone-icon">📁</div>
+                <div class="file-drop-zone-text">
+                    拖拽文件到此处 或 <span>点击选择文件</span><br>
+                    <small style="opacity: 0.6;">支持 .txt, .csv, .md, .json, .js, .html 等文本文件</small>
+                </div>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".txt,.csv,.md,.json,.js,.html,.css,.xml,.yaml,.yml,.log">
+            <div class="file-list" id="fileList"></div>
+            
+            <div class="row" style="margin-top: 20px;">
+                <div class="input-group">
+                    <label class="input-label">批量处理选项</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="batchRemoveEmpty" checked>
+                            <span>删除空行</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="batchTrim" checked>
+                            <span>删除行首尾空格</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="batchRemoveBOM">
+                            <span>移除 BOM</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="batchNormalize">
+                            <span>统一换行符为 LF</span>
+                        </label>
+                    </div>
+                    <div class="input-group" style="margin-top: 16px;">
+                        <label class="input-label">查找并替换（可选）</label>
+                        <input type="text" id="batchFind" placeholder="查找内容">
+                        <input type="text" id="batchReplace" placeholder="替换为" style="margin-top: 8px;">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="processBatch()">开始处理</button>
+                        <button class="btn btn-secondary" onclick="clearBatch()">清空</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">处理结果</label>
+                    <div id="batchResults" style="max-height: 300px; overflow-y: auto;">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <p>选择文件后将在此显示处理结果</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 标签切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.panel).classList.add('active');
+            });
+        });
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // 复制结果
+        function copyResult(elementId) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy');
+            showToast('已复制到剪贴板');
+        }
+
+        // 统计更新
+        function updateStats(inputId, charId, lineId) {
+            const input = document.getElementById(inputId);
+            const text = input.value;
+            document.getElementById(charId).textContent = text.length;
+            document.getElementById(lineId).textContent = text ? text.split('\n').length : 0;
+        }
+
+        document.getElementById('replaceInput').addEventListener('input', () => {
+            updateStats('replaceInput', 'replaceCharCount', 'replaceLineCount');
+        });
+
+        document.getElementById('dedupInput').addEventListener('input', () => {
+            const text = document.getElementById('dedupInput').value;
+            const lines = text ? text.split('\n').filter(l => l.trim()) : [];
+            document.getElementById('dedupTotalCount').textContent = lines.length;
+        });
+
+        // ========== 查找替换 ==========
+        function doReplace() {
+            let text = document.getElementById('replaceInput').value;
+            const find = document.getElementById('findText').value;
+            const replace = document.getElementById('replaceText').value;
+            
+            if (!find) {
+                showToast('请输入查找内容');
+                return;
+            }
+
+            const useRegex = document.getElementById('useRegex').checked;
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const wholeWord = document.getElementById('wholeWord').checked;
+
+            let flags = caseSensitive ? 'g' : 'gi';
+            let pattern = find;
+
+            if (wholeWord && !useRegex) {
+                pattern = '\\b' + escapeRegex(find) + '\\b';
+            } else if (!useRegex) {
+                pattern = escapeRegex(find);
+            }
+
+            try {
+                const regex = new RegExp(pattern, flags);
+                const result = text.replace(regex, replace);
+                document.getElementById('replaceOutput').value = result;
+                showToast('替换完成');
+            } catch (e) {
+                showToast('正则表达式错误: ' + e.message);
+            }
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function clearReplace() {
+            document.getElementById('replaceInput').value = '';
+            document.getElementById('replaceOutput').value = '';
+            document.getElementById('findText').value = '';
+            document.getElementById('replaceText').value = '';
+            updateStats('replaceInput', 'replaceCharCount', 'replaceLineCount');
+        }
+
+        // ========== 去重工具 ==========
+        function doDedup() {
+            const text = document.getElementById('dedupInput').value;
+            if (!text.trim()) {
+                showToast('请输入文本');
+                return;
+            }
+
+            const ignoreCase = document.getElementById('ignoreCase').checked;
+            const ignoreSpace = document.getElementById('ignoreSpace').checked;
+            const keepFirst = document.getElementById('keepFirst').checked;
+            const showRemoved = document.getElementById('showRemoved').checked;
+            const sortResult = document.getElementById('sortResult').checked;
+
+            const lines = text.split('\n');
+            const seen = new Set();
+            const unique = [];
+            const removed = [];
+
+            for (const line of lines) {
+                let key = line;
+                if (ignoreSpace) key = key.trim();
+                if (ignoreCase) key = key.toLowerCase();
+
+                if (seen.has(key)) {
+                    if (showRemoved) removed.push(line);
+                } else {
+                    seen.add(key);
+                    unique.push(line);
+                }
+            }
+
+            let result = unique;
+            if (sortResult) {
+                result = result.sort((a, b) => {
+                    const a1 = ignoreCase ? a.toLowerCase() : a;
+                    const b1 = ignoreCase ? b.toLowerCase() : b;
+                    return a1.localeCompare(b1);
+                });
+            }
+
+            let output = result.join('\n');
+            if (showRemoved && removed.length > 0) {
+                output += '\n\n=== 被删除的重复项 ===\n' + removed.join('\n');
+            }
+
+            document.getElementById('dedupOutput').value = output;
+            document.getElementById('dedupUniqueCount').textContent = unique.length;
+            document.getElementById('dedupDupCount').textContent = removed.length;
+            showToast(`去重完成，保留 ${unique.length} 行`);
+        }
+
+        function clearDedup() {
+            document.getElementById('dedupInput').value = '';
+            document.getElementById('dedupOutput').value = '';
+            document.getElementById('dedupTotalCount').textContent = '0';
+            document.getElementById('dedupUniqueCount').textContent = '0';
+            document.getElementById('dedupDupCount').textContent = '0';
+        }
+
+        // ========== 格式转换 ==========
+        function getFormatInput() {
+            return document.getElementById('formatInput').value;
+        }
+        function setFormatOutput(text) {
+            document.getElementById('formatOutput').value = text;
+        }
+
+        function toUpperCase() {
+            setFormatOutput(getFormatInput().toUpperCase());
+        }
+        function toLowerCase() {
+            setFormatOutput(getFormatInput().toLowerCase());
+        }
+        function toTitleCase() {
+            const text = getFormatInput();
+            setFormatOutput(text.replace(/\w\S*/g, txt => 
+                txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+            ));
+        }
+        function removeExtraSpace() {
+            setFormatOutput(getFormatInput().replace(/\s+/g, ' ').trim());
+        }
+        function removeEmptyLines() {
+            setFormatOutput(getFormatInput().split('\n').filter(l => l.trim()).join('\n'));
+        }
+        function trimLines() {
+            setFormatOutput(getFormatInput().split('\n').map(l => l.trim()).join('\n'));
+        }
+        function addLineNumbers() {
+            const lines = getFormatInput().split('\n');
+            setFormatOutput(lines.map((l, i) => `${i + 1}. ${l}`).join('\n'));
+        }
+        function reverseLines() {
+            setFormatOutput(getFormatInput().split('\n').reverse().join('\n'));
+        }
+        function sortLines() {
+            setFormatOutput(getFormatInput().split('\n').sort().join('\n'));
+        }
+        function removePunctuation() {
+            setFormatOutput(getFormatInput().replace(/[.,/#!$%^&*;:{}=\-_`~()"'?!\[\]]/g, ''));
+        }
+        function clearFormat() {
+            document.getElementById('formatInput').value = '';
+            document.getElementById('formatOutput').value = '';
+        }
+
+        // ========== 编码转换 ==========
+        function doEncoding() {
+            const input = document.getElementById('encodingInput').value;
+            const source = document.getElementById('sourceEncoding').value;
+            const target = document.getElementById('targetEncoding').value;
+
+            if (!input) {
+                showToast('请输入文本');
+                return;
+            }
+
+            let result = input;
+
+            // 解码
+            try {
+                switch (source) {
+                    case 'base64':
+                        result = atob(input);
+                        break;
+                    case 'url':
+                        result = decodeURIComponent(input);
+                        break;
+                    case 'html':
+                        const textarea = document.createElement('textarea');
+                        textarea.innerHTML = input;
+                        result = textarea.value;
+                        break;
+                    case 'unicode':
+                        result = input.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+                        break;
+                    case 'hex':
+                        result = input.match(/.{1,2}/g)?.map(b => String.fromCharCode(parseInt(b, 16))).join('') || input;
+                        break;
+                }
+            } catch (e) {
+                showToast('解码失败: ' + e.message);
+                return;
+            }
+
+            // 编码
+            try {
+                switch (target) {
+                    case 'base64':
+                        result = btoa(unescape(encodeURIComponent(result)));
+                        break;
+                    case 'url':
+                        result = encodeURIComponent(result);
+                        break;
+                    case 'html':
+                        result = result.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+                        break;
+                    case 'unicode':
+                        result = result.split('').map(c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')).join('');
+                        break;
+                    case 'hex':
+                        result = result.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+                        break;
+                    case 'binary':
+                        result = result.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+                        break;
+                }
+                document.getElementById('encodingOutput').value = result;
+                showToast('编码转换完成');
+            } catch (e) {
+                showToast('编码失败: ' + e.message);
+            }
+        }
+
+        function clearEncoding() {
+            document.getElementById('encodingInput').value = '';
+            document.getElementById('encodingOutput').value = '';
+        }
+
+        // ========== 正则提取 ==========
+        function doRegex() {
+            const text = document.getElementById('regexInput').value;
+            const pattern = document.getElementById('regexPattern').value;
+            const replace = document.getElementById('regexReplace').value;
+
+            if (!pattern) {
+                showToast('请输入正则表达式');
+                return;
+            }
+
+            let flags = '';
+            if (document.getElementById('flagGlobal').checked) flags += 'g';
+            if (document.getElementById('flagIgnoreCase').checked) flags += 'i';
+            if (document.getElementById('flagMultiline').checked) flags += 'm';
+            if (document.getElementById('flagDotAll').checked) flags += 's';
+
+            try {
+                const regex = new RegExp(pattern, flags);
+                
+                if (replace) {
+                    // 替换模式
+                    const result = text.replace(regex, replace);
+                    document.getElementById('regexOutput').value = result;
+                    showToast('替换完成');
+                } else {
+                    // 提取模式
+                    const matches = text.match(regex);
+                    if (matches) {
+                        document.getElementById('regexOutput').value = matches.join('\n');
+                        document.getElementById('regexMatchCount').textContent = matches.length;
+                        showToast(`找到 ${matches.length} 个匹配`);
+                    } else {
+                        document.getElementById('regexOutput').value = '';
+                        document.getElementById('regexMatchCount').textContent = '0';
+                        showToast('未找到匹配');
+                    }
+                }
+            } catch (e) {
+                showToast('正则错误: ' + e.message);
+            }
+        }
+
+        function clearRegex() {
+            document.getElementById('regexInput').value = '';
+            document.getElementById('regexOutput').value = '';
+            document.getElementById('regexPattern').value = '';
+            document.getElementById('regexReplace').value = '';
+            document.getElementById('regexMatchCount').textContent = '0';
+        }
+
+        // ========== 批量处理 ==========
+        const batchFiles = [];
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            for (const file of files) {
+                if (file.type.startsWith('text/') || file.name.match(/\.(txt|csv|md|json|js|html|css|xml|yaml|yml|log)$/i)) {
+                    batchFiles.push(file);
+                }
+            }
+            updateFileList();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = batchFiles.map((file, i) => `
+                <span class="file-tag">
+                    ${file.name}
+                    <span class="remove" onclick="removeFile(${i})">×</span>
+                </span>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            batchFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        async function processBatch() {
+            if (batchFiles.length === 0) {
+                showToast('请先选择文件');
+                return;
+            }
+
+            const results = document.getElementById('batchResults');
+            results.innerHTML = '<p style="color: rgba(255,255,255,0.5);">处理中...</p>';
+
+            const removeEmpty = document.getElementById('batchRemoveEmpty').checked;
+            const trim = document.getElementById('batchTrim').checked;
+            const removeBOM = document.getElementById('batchRemoveBOM').checked;
+            const normalize = document.getElementById('batchNormalize').checked;
+            const find = document.getElementById('batchFind').value;
+            const replace = document.getElementById('batchReplace').value;
+
+            const processed = [];
+
+            for (const file of batchFiles) {
+                try {
+                    let content = await file.text();
+                    
+                    // 移除 BOM
+                    if (removeBOM && content.charCodeAt(0) === 0xFEFF) {
+                        content = content.slice(1);
+                    }
+
+                    // 统一换行符
+                    if (normalize) {
+                        content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                    }
+
+                    let lines = content.split('\n');
+
+                    // 删除空行
+                    if (removeEmpty) {
+                        lines = lines.filter(l => l.trim());
+                    }
+
+                    // 删除行首尾空格
+                    if (trim) {
+                        lines = lines.map(l => l.trim());
+                    }
+
+                    content = lines.join('\n');
+
+                    // 查找替换
+                    if (find) {
+                        content = content.split(find).join(replace);
+                    }
+
+                    processed.push({ name: file.name, content, size: content.length });
+                } catch (e) {
+                    processed.push({ name: file.name, error: e.message });
+                }
+            }
+
+            // 显示结果
+            results.innerHTML = processed.map(p => `
+                <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 500;">${p.name}</span>
+                        ${p.error 
+                            ? `<span style="color: #f44336;">错误: ${p.error}</span>`
+                            : `<span style="color: rgba(255,255,255,0.5); font-size: 12px;">${p.size} 字符</span>`
+                        }
+                    </div>
+                    ${!p.error ? `<button class="btn btn-success" style="margin-top: 8px; padding: 6px 12px; font-size: 12px;" onclick='downloadFile("${p.name}", ${JSON.stringify(p.content)})'>下载</button>` : ''}
+                </div>
+            `).join('');
+
+            showToast(`处理完成 ${processed.filter(p => !p.error).length}/${batchFiles.length} 个文件`);
+        }
+
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename.replace(/\.([^.]+)$/, '_processed.$1');
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearBatch() {
+            batchFiles.length = 0;
+            updateFileList();
+            document.getElementById('batchResults').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📂</div>
+                    <p>选择文件后将在此显示处理结果</p>
+                </div>
+            `;
+            document.getElementById('batchFind').value = '';
+            document.getElementById('batchReplace').value = '';
+        }
+    </script>
+</body>
+</html>
