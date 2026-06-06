@@ -650,23 +650,60 @@ function reparseWithEncoding() {
                         let data = [];
                         
                         if (ext === 'csv' || ext === 'txt') {
-                            const text = e.target.result;
-                            const lines = text.split('\n').filter(line => line.trim());
-                            if (lines.length === 0) {
-                                resolve([]);
-                                return;
+                            // Read as ArrayBuffer for encoding detection
+                            const arrayBuffer = e.target.result;
+                            
+                            // Detect encoding
+                            let detectedEnc = 'UTF-8';
+                            const uint8 = new Uint8Array(arrayBuffer);
+                            if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) detectedEnc = 'UTF-8';
+                            else if (uint8[0] === 0xFF && uint8[1] === 0xFE) detectedEnc = 'UTF-16LE';
+                            else if (uint8[0] === 0xFE && uint8[1] === 0xFF) detectedEnc = 'UTF-16BE';
+                            else {
+                                const utf8Text = new TextDecoder('utf-8').decode(uint8);
+                                if (!utf8Text.includes('\ufffd')) detectedEnc = 'UTF-8';
+                                else {
+                                    try { const gbkText = new TextDecoder('gbk').decode(uint8); if (!gbkText.includes('\ufffd') && /[\u4e00-\u9fa5]/.test(gbkText)) detectedEnc = 'GBK'; } catch(e2) {}
+                                }
                             }
                             
-                            // Use detected/specified delimiter
-                            let delimiter = actualDelimiter;
+                            // Use detected or user-specified encoding
+                            let encoding = detectedEnc;
+                            const fi = uploadedFiles.find(f => f.file && f.file.name === file.name);
+                            if (fi && fi.encoding) encoding = fi.encoding;
+                            
+                            const decoderMap = { 'UTF-8':'utf-8','GBK':'gbk','GB2312':'gbk','UTF-16':'utf-16','ISO-8859-1':'iso-8859-1' };
+                            const text = new TextDecoder(decoderMap[encoding] || 'utf-8').decode(arrayBuffer);
+                            
+                            // Store in file item for later use
+                            if (fi) {
+                                fi.arrayBuffer = arrayBuffer;
+                                fi.detectedEncoding = detectedEnc;
+                                fi.encoding = encoding;
+                                fi.cachedText = text;
+                            }
+                            
+                            // Detect delimiter
+                            const firstLine = text.split('\n')[0] || '';
+                            let userDelim = fi ? fi.delimiter : null;
+                            let delimiter = ',';
+                            if (userDelim && userDelim !== 'auto') delimiter = userDelim;
+                            else {
+                                const counts = { ',':0, ';':0, '\t':0, '|':0 };
+                                for (const ch of firstLine) { if (counts.hasOwnProperty(ch)) counts[ch]++; }
+                                let maxD = ',', maxC = 0;
+                                for (const [d, c] of Object.entries(counts)) { if (c > maxC) { maxC = c; maxD = d; } }
+                                delimiter = maxD;
+                            }
+                            
+                            const lines = text.split('\n').filter(line => line.trim());
+                            if (lines.length === 0) { resolve([]); return; }
                             
                             const headers = lines[0].split(delimiter).map(h => h.trim());
                             for (let i = 1; i < lines.length; i++) {
                                 const values = lines[i].split(delimiter).map(v => v.trim());
                                 let row = {};
-                                headers.forEach((h, idx) => {
-                                    row[h] = values[idx] || '';
-                                });
+                                headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
                                 data.push(row);
                             }
                         } else if (ext === 'xlsx' || ext === 'xls') {
