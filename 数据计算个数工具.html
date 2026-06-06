@@ -98,6 +98,34 @@ function reparseWithEncoding() {
     }
 }
 
+    
+        // ===== GUIDE MODAL =====
+        function toggleGuide() {
+            const modal = document.getElementById('guideModal');
+            modal.classList.toggle('active');
+            if (modal.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeGuideOnBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                toggleGuide();
+            }
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('guideModal');
+                if (modal && modal.classList.contains('active')) {
+                    toggleGuide();
+                }
+            }
+        });
+
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -368,6 +396,143 @@ function reparseWithEncoding() {
         }
         .encoding-status.success { background: rgba(76,175,80,0.15); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
         .encoding-status.error { background: rgba(244,67,54,0.15); color: #e57373; border: 1px solid rgba(244,67,54,0.3); }
+
+    
+        /* Guide Button & Modal */
+        .guide-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .guide-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .guide-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .guide-modal.active {
+            display: flex;
+        }
+        .guide-content {
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .guide-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .guide-header h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .guide-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        .guide-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .guide-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+        }
+        .guide-section {
+            margin-bottom: 24px;
+        }
+        .guide-section:last-child {
+            margin-bottom: 0;
+        }
+        .guide-section h3 {
+            color: #a78bfa;
+            font-size: 16px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .guide-section p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .guide-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .guide-section li {
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+        }
+        .guide-section li strong {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        .guide-table th,
+        .guide-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .guide-table th {
+            background: rgba(102, 126, 234, 0.2);
+            color: #a78bfa;
+            font-weight: 600;
+        }
+        .guide-table td {
+            color: rgba(255, 255, 255, 0.75);
+        }
 
     </style>
 </head>
@@ -942,5 +1107,94 @@ function reparseWithEncoding() {
             }, 5000);
         }
     </script>
+
+    <!-- 使用说明浮动按钮 -->
+    <button class="guide-btn" onclick="toggleGuide()" title="查看使用说明">📖</button>
+    
+    <!-- 使用说明弹窗 -->
+    <div class="guide-modal" id="guideModal" onclick="closeGuideOnBackdrop(event)">
+        <div class="guide-content" onclick="event.stopPropagation()">
+            <div class="guide-header">
+                <h2>📖 数据计算个数工具使用说明</h2>
+                <button class="guide-close" onclick="toggleGuide()">✕</button>
+            </div>
+            <div class="guide-body">
+                <div class="guide-section">
+                    <h3>🎯 功能简介</h3>
+                    <p>统计 CSV/Excel/TXT 文件中各列的数据分布情况，包括总数、去重数、空值数、去重率等。适用于数据质量检查、重复数据分析、字段完整性统计。</p>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>📁 1. 文件上传</h3>
+                    <ul>
+                        <li><strong>支持格式</strong>：.csv、.xlsx、.xls、.txt</li>
+                        <li><strong>多文件上传</strong>：可同时上传多个文件进行合并统计</li>
+                        <li><strong>拖拽上传</strong>：支持拖拽文件到上传区域</li>
+                        <li>上传后显示文件列表，可删除或清空</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>🔧 2. 编码设置（可选）</h3>
+                    <ul>
+                        <li>点击文件旁的「⚙️ 编码」按钮</li>
+                        <li>系统自动检测 UTF-8、GBK 等常见编码</li>
+                        <li>如中文乱码，手动切换为 GBK 后重新解析</li>
+                        <li>支持自定义分隔符（CSV/TXT 文件）</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>📊 3. 列选择与统计</h3>
+                    <ul>
+                        <li>点击「解析所有文件」读取数据</li>
+                        <li>勾选需要统计的列（可多选）</li>
+                        <li>提供「全选」「取消全选」「反选」快捷按钮</li>
+                        <li>支持多文件合并统计</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>📈 4. 统计指标说明</h3>
+                    <table class="guide-table">
+                        <tr><th>指标</th><th>说明</th></tr>
+                        <tr><td>数据个数</td><td>该列的总数据条数（不含空值）</td></tr>
+                        <tr><td>去重个数</td><td>该列不重复值的数量</td></tr>
+                        <tr><td>空值个数</td><td>该列空值/空白单元格的数量</td></tr>
+                        <tr><td>去重率</td><td>去重个数 ÷ 数据个数 × 100%</td></tr>
+                    </table>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>👁️ 5. 结果查看</h3>
+                    <ul>
+                        <li>统计结果以表格形式展示</li>
+                        <li>每行显示一列的统计指标</li>
+                        <li>去重率以百分比显示，便于快速识别重复数据</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>💾 6. 导出结果</h3>
+                    <ul>
+                        <li><strong>导出格式</strong>：Excel (.xlsx)、CSV (.csv)</li>
+                        <li><strong>文件名</strong>：可自定义导出文件名</li>
+                        <li>导出结果包含所有统计指标</li>
+                    </ul>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>💡 使用技巧</h3>
+                    <ul>
+                        <li>去重率低说明该列有大量重复数据（如状态码、分类字段）</li>
+                        <li>去重率高说明该列数据较唯一（如 ID、手机号）</li>
+                        <li>空值个数可帮助发现数据缺失问题</li>
+                        <li>所有计算在本地完成，保护数据隐私</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
