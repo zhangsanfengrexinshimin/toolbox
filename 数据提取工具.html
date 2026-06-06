@@ -98,34 +98,6 @@ function reparseWithEncoding() {
     }
 }
 
-    
-        // ===== GUIDE MODAL =====
-        function toggleGuide() {
-            const modal = document.getElementById('guideModal');
-            modal.classList.toggle('active');
-            if (modal.classList.contains('active')) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
-            }
-        }
-        
-        function closeGuideOnBackdrop(event) {
-            if (event.target === event.currentTarget) {
-                toggleGuide();
-            }
-        }
-        
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('guideModal');
-                if (modal && modal.classList.contains('active')) {
-                    toggleGuide();
-                }
-            }
-        });
-
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1108,6 +1080,33 @@ function reparseWithEncoding() {
                 alertDiv.remove();
             }, 5000);
         }
+
+        // ===== GUIDE MODAL =====
+        function toggleGuide() {
+            const modal = document.getElementById('guideModal');
+            modal.classList.toggle('active');
+            if (modal.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeGuideOnBackdrop(event) {
+            if (event.target === event.currentTarget) {
+                toggleGuide();
+            }
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('guideModal');
+                if (modal && modal.classList.contains('active')) {
+                    toggleGuide();
+                }
+            }
+        });
     </script>
 
     <!-- 使用说明浮动按钮 -->
