@@ -4,7 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数据计算个数工具 - 热心市民张三丰的工具箱</title>
-    <script src="xlsx.full.min.js"></script>
+    <script src="xlsx.full.min.js">
+// ===== ENCODING DETECTION & REPARSE =====
+
+function detectDelimiter(text) {
+    const firstLine = text.split('
+')[0] || '';
+    const counts = { ',': 0, ';': 0, '\t': 0, '|': 0 };
+    for (const ch of firstLine) {
+        if (counts.hasOwnProperty(ch)) counts[ch]++;
+    }
+    let maxDelim = ',', maxCount = 0;
+    for (const [delim, count] of Object.entries(counts)) {
+        if (count > maxCount) { maxCount = count; maxDelim = delim; }
+    }
+    return maxDelim === '\t' ? '\t' : maxDelim;
+}
+
+function detectEncoding(arrayBuffer) {
+    const uint8 = new Uint8Array(arrayBuffer);
+    // Check BOM
+    if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) return 'UTF-8';
+    if (uint8[0] === 0xFF && uint8[1] === 0xFE) return 'UTF-16LE';
+    if (uint8[0] === 0xFE && uint8[1] === 0xFF) return 'UTF-16BE';
+    
+    // Try UTF-8
+    const utf8Text = new TextDecoder('utf-8').decode(uint8);
+    if (!utf8Text.includes('�')) return 'UTF-8';
+    
+    // Try GBK
+    try {
+        const gbkText = new TextDecoder('gbk').decode(uint8);
+        if (!gbkText.includes('�') && /[\u4e00-\u9fa5]/.test(gbkText)) return 'GBK';
+    } catch(e) {}
+    
+    return 'UTF-8'; // default fallback
+}
+
+let currentFileForEncoding = null;
+
+function showEncodingSettings(fileIndex) {
+    currentFileForEncoding = fileIndex;
+    const panel = document.getElementById('encodingSettings');
+    const fileItem = uploadedFiles[fileIndex];
+    
+    document.getElementById('encodingFileName').textContent = fileItem.name;
+    document.getElementById('encodingSelect').value = fileItem.encoding || 'UTF-8';
+    document.getElementById('delimiterSelect').value = fileItem.delimiter || 'auto';
+    document.getElementById('detectedEncoding').textContent = fileItem.detectedEncoding || '-';
+    document.getElementById('encodingStatus').innerHTML = '';
+    
+    panel.style.display = 'block';
+}
+
+function reparseWithEncoding() {
+    if (currentFileForEncoding === null) return;
+    
+    const fileItem = uploadedFiles[currentFileForEncoding];
+    const encoding = document.getElementById('encodingSelect').value;
+    const delimiter = document.getElementById('delimiterSelect').value;
+    const statusEl = document.getElementById('encodingStatus');
+    
+    if (fileItem.type === 'xlsx' || fileItem.type === 'xls') {
+        statusEl.className = 'encoding-status error';
+        statusEl.textContent = '❌ Excel 文件无需调整编码和分隔符';
+        return;
+    }
+    
+    try {
+        const decoderMap = {
+            'UTF-8': 'utf-8', 'GBK': 'gbk', 'GB2312': 'gbk',
+            'UTF-16': 'utf-16', 'ISO-8859-1': 'iso-8859-1'
+        };
+        const text = new TextDecoder(decoderMap[encoding]).decode(fileItem.arrayBuffer);
+        
+        statusEl.className = 'encoding-status success';
+        statusEl.textContent = '✅ 使用 ' + encoding + ' 编码成功解码，共 ' + text.split('\n').length + ' 行';
+        
+        // Update file item settings
+        fileItem.encoding = encoding;
+        fileItem.delimiter = delimiter;
+        fileItem.cachedText = text;
+        
+        showAlert('✅ 已更新 "' + fileItem.name + '" 的编码设置为 ' + encoding, 'success');
+        
+        // Re-parse if already parsed
+        if (parsedData.length > 0) {
+            parseAllFiles();
+        }
+    } catch(e) {
+        statusEl.className = 'encoding-status error';
+        statusEl.textContent = '❌ 解码失败：' + e.message;
+    }
+}
+
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -259,6 +353,22 @@
             display: none;
         }
         .export-section h4 { color: rgba(102,126,234,1); margin-bottom: 10px; font-size: 14px; }
+    
+        /* Encoding Settings */
+        .encoding-settings {
+            background: rgba(255,193,7,0.08);
+            border: 1px solid rgba(255,193,7,0.25);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+        .encoding-settings h4 { color: #ffb74d; margin-bottom: 12px; font-size: 14px; }
+        .encoding-status {
+            padding: 8px 14px; border-radius: 6px; font-size: 13px; margin-top: 8px;
+        }
+        .encoding-status.success { background: rgba(76,175,80,0.15); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+        .encoding-status.error { background: rgba(244,67,54,0.15); color: #e57373; border: 1px solid rgba(244,67,54,0.3); }
+
     </style>
 </head>
 <body>
@@ -302,6 +412,45 @@
         </div>
 
         <!-- Column Selector -->
+        
+        <!-- Encoding Settings -->
+        <div class="encoding-settings" id="encodingSettings" style="display:none;">
+            <h4>🔧 文件编码与分隔符设置</h4>
+            <div class="setting-row">
+                <label>当前文件：</label>
+                <span id="encodingFileName" style="color:rgba(102,126,234,1);font-weight:600;"></span>
+            </div>
+            <div class="setting-row">
+                <label>编码：</label>
+                <select id="encodingSelect">
+                    <option value="UTF-8">UTF-8（推荐）</option>
+                    <option value="GBK">GBK（简体中文）</option>
+                    <option value="GB2312">GB2312</option>
+                    <option value="UTF-16">UTF-16</option>
+                    <option value="ISO-8859-1">ISO-8859-1</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>分隔符：</label>
+                <select id="delimiterSelect">
+                    <option value="auto">自动检测</option>
+                    <option value=",">逗号 (,)</option>
+                    <option value=";">分号 (;)</option>
+                    <option value="	">制表符 (Tab)</option>
+                    <option value="|">管道符 (|)</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>检测到的编码：</label>
+                <span id="detectedEncoding" style="color:#81c784;font-weight:600;">-</span>
+            </div>
+            <div class="encoding-status" id="encodingStatus"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;">
+                <button class="btn btn-primary btn-small" onclick="reparseWithEncoding()">🔄 重新解析</button>
+                <button class="btn btn-secondary btn-small" onclick="document.getElementById('encodingSettings').style.display='none'">关闭</button>
+            </div>
+        </div>
+
         <div class="column-selector" id="columnSelector">
             <h3>📋 选择要统计的列</h3>
             <div style="margin-bottom: 15px; display: flex; gap: 10px;">
@@ -432,6 +581,7 @@
                         </div>
                     </div>
                     <div class="file-actions">
+                        <button class="btn btn-tiny btn-warning" onclick="showEncodingSettings(${index})">⚙️ 编码</button>
                         <button class="btn btn-tiny btn-danger" onclick="removeFile(${index})">删除</button>
                     </div>
                 `;
@@ -516,12 +666,7 @@
                                 return;
                             }
                             
-                            // Detect delimiter
-                            const firstLine = lines[0];
-                            let delimiter = ',';
-                            if (firstLine.includes('\t')) delimiter = '\t';
-                            else if (firstLine.includes(';')) delimiter = ';';
-                            else if (firstLine.includes('|')) delimiter = '|';
+                            let delimiter = actualDelimiter;
                             
                             const headers = lines[0].split(delimiter).map(h => h.trim());
                             for (let i = 1; i < lines.length; i++) {
@@ -549,11 +694,7 @@
                     reject(new Error('文件读取失败'));
                 };
 
-                if (ext === 'csv' || ext === 'txt') {
-                    reader.readAsText(file, 'UTF-8');
-                } else {
-                    reader.readAsArrayBuffer(file);
-                }
+                reader.readAsArrayBuffer(file);
             });
         }
 
