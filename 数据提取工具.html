@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据提取工具 - 热心市民张三丰的工具箱</title>
+    <script src="xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            color: rgba(255,255,255,0.9);
+        }
+        .header {
+            background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.15));
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 20px 0;
+        }
+        .header-content {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            font-size: 32px;
+            text-decoration: none;
+        }
+        .logo-text {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .logo-text span {
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            font-weight: 400;
+        }
+        .back-link {
+            color: rgba(102,126,234,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: rgba(102,126,234,1); }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-desc {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* Upload */
+        .upload-area {
+            border: 2px dashed rgba(102,126,234,0.4);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(255,255,255,0.03);
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover { border-color: rgba(102,126,234,0.8); background: rgba(255,255,255,0.06); }
+        .upload-area.drag-over { border-color: #667eea; background: rgba(102,126,234,0.1); transform: scale(1.01); }
+        .upload-icon { font-size: 48px; margin-bottom: 12px; }
+        .upload-text { font-size: 16px; color: rgba(102,126,234,0.8); margin-bottom: 8px; }
+        .upload-hint { color: rgba(255,255,255,0.4); font-size: 13px; }
+        .file-input { display: none; }
+
+        /* Buttons */
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
+        .btn-primary { background: rgba(102,126,234,0.2); color: rgba(102,126,234,1); border: 1px solid rgba(102,126,234,0.4); }
+        .btn-primary:hover { background: rgba(102,126,234,0.3); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+        .btn-success { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.4); }
+        .btn-success:hover { background: rgba(76,175,80,0.3); }
+        .btn-danger { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid rgba(244,67,54,0.4); }
+        .btn-danger:hover { background: rgba(244,67,54,0.3); }
+        .btn-warning { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid rgba(255,152,0,0.4); }
+        .btn-warning:hover { background: rgba(255,152,0,0.3); }
+        .btn-small { padding: 7px 14px; font-size: 13px; }
+        .btn-tiny { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+
+        /* Alerts */
+        .alert { padding: 12px 18px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; }
+        .alert-info { background: rgba(25,118,210,0.1); color: #64b5f6; border: 1px solid rgba(25,118,210,0.3); }
+        .alert-success { background: rgba(76,175,80,0.1); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+        .alert-error { background: rgba(244,67,54,0.1); color: #e57373; border: 1px solid rgba(244,67,54,0.3); }
+        .alert-warning { background: rgba(255,152,0,0.1); color: #ffb74d; border: 1px solid rgba(255,152,0,0.3); }
+
+        /* File List */
+        .file-list {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .file-list h3 { color: rgba(102,126,234,0.9); margin-bottom: 15px; font-size: 16px; }
+        .file-item {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-item:hover { border-color: rgba(102,126,234,0.4); }
+        .file-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .file-name { font-weight: 600; color: rgba(255,255,255,0.9); font-size: 14px; }
+        .file-meta { color: rgba(255,255,255,0.4); font-size: 12px; }
+        .file-actions { display: flex; gap: 8px; }
+
+        /* Column Selector */
+        .column-selector {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .column-selector h3 { color: rgba(255,255,255,0.9); margin-bottom: 15px; font-size: 16px; }
+        .column-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .column-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .column-checkbox:hover { background: rgba(255,255,255,0.06); }
+        .column-checkbox input[type="checkbox"] { accent-color: #667eea; }
+        .column-checkbox label { color: rgba(255,255,255,0.8); font-size: 13px; cursor: pointer; flex: 1; }
+        .column-checkbox.selected { background: rgba(102,126,234,0.15); border: 1px solid rgba(102,126,234,0.3); }
+
+        /* Settings */
+        .settings {
+            background: rgba(255,193,7,0.08);
+            border: 1px solid rgba(255,193,7,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .settings h4 { color: #ffb74d; margin-bottom: 10px; font-size: 14px; }
+        .setting-row { display: flex; gap: 12px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+        select, input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.9);
+        }
+        select:focus, input:focus { outline: none; border-color: rgba(102,126,234,0.5); }
+        select option { background: #1a1a2e; color: rgba(255,255,255,0.9); }
+        label { color: rgba(255,255,255,0.7); font-size: 13px; }
+        input[type="checkbox"] { accent-color: #667eea; }
+
+        /* Preview */
+        .preview {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        .preview h3 { color: rgba(255,255,255,0.9); margin-bottom: 15px; font-size: 16px; }
+        .data-table-wrapper {
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .data-table th {
+            background: rgba(102,126,234,0.15);
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: rgba(102,126,234,1);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 0;
+        }
+        .data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+        }
+        .data-table tr:hover { background: rgba(255,255,255,0.03); }
+
+        /* Merge Options */
+        .merge-options {
+            background: rgba(76,175,80,0.08);
+            border: 1px solid rgba(76,175,80,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .merge-options h4 { color: #81c784; margin-bottom: 10px; font-size: 14px; }
+
+        /* Export */
+        .export-section {
+            background: rgba(102,126,234,0.08);
+            border: 1px solid rgba(102,126,234,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .export-section h4 { color: rgba(102,126,234,1); margin-bottom: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <span class="logo">📋</span>
+                <div class="logo-text">
+                    数据提取工具
+                    <span>热心市民张三丰的工具箱</span>
+                </div>
+            </div>
+            <a href="index.html" class="back-link" target="_blank">
+                🏠 工具箱首页 ↗
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-title">数据提取工具</div>
+        <div class="page-desc">从多个文件中提取指定列并合并导出 · 支持编码识别与调整</div>
+
+        <div id="alertArea"></div>
+
+        <!-- Upload -->
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">点击或拖拽文件到此处上传（支持多文件）</div>
+            <div class="upload-hint">支持 .csv, .xlsx, .xls, .txt 格式 | 可同时选择多个文件 | 自动检测编码和分隔符</div>
+            <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls,.txt" multiple>
+        </div>
+
+        <!-- File List -->
+        <div class="file-list" id="fileList">
+            <h3>📂 已上传文件</h3>
+            <div id="fileItems"></div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="parseAllFiles()">📊 解析所有文件</button>
+                <button class="btn btn-danger" onclick="clearAllFiles()">🗑️ 清空所有文件</button>
+            </div>
+        </div>
+
+        <!-- Column Selector -->
+        <div class="column-selector" id="columnSelector">
+            <h3>📋 选择要提取的列</h3>
+            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-small btn-secondary" onclick="selectAllColumns()">全选</button>
+                <button class="btn btn-small btn-secondary" onclick="deselectAllColumns()">取消全选</button>
+                <button class="btn btn-small btn-secondary" onclick="invertSelection()">反选</button>
+            </div>
+            <div class="column-checkboxes" id="columnCheckboxes"></div>
+            
+            <!-- Merge Options -->
+            <div class="merge-options" id="mergeOptions">
+                <h4>🔗 多文件合并选项</h4>
+                <div class="setting-row">
+                    <label>
+                        <input type="checkbox" id="mergeFiles" checked>
+                        合并所有文件的选定列
+                    </label>
+                </div>
+                <div class="setting-row" id="headerCheckRow" style="display: none;">
+                    <label>
+                        <input type="checkbox" id="checkHeader" checked>
+                        检查表头一致性（不一致时发出警告）
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-success" onclick="extractData()">✅ 提取数据</button>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview" id="preview">
+            <h3>👁️ 数据预览</h3>
+            <div id="previewStats" style="color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 10px;"></div>
+            <div class="data-table-wrapper">
+                <table class="data-table" id="previewTable"></table>
+            </div>
+            
+            <!-- Export -->
+            <div class="export-section" id="exportSection">
+                <h4>📥 导出数据</h4>
+                <div class="setting-row">
+                    <label>导出格式：</label>
+                    <select id="exportFormat">
+                        <option value="xlsx">Excel (.xlsx)</option>
+                        <option value="csv">CSV (UTF-8 BOM)</option>
+                        <option value="txt">文本文件 (Tab分隔)</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>文件名：</label>
+                    <input type="text" id="exportFileName" value="提取结果" style="width: 200px;">
+                </div>
+                <button class="btn btn-primary" onclick="exportData()" style="margin-top: 10px;">📥 导出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let parsedData = [];
+        let allColumns = [];
+
+        // Upload
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (!uploadedFiles.find(f => f.name === file.name)) {
+                    uploadedFiles.push({
+                        file: file,
+                        name: file.name,
+                        size: file.size,
+                        type: file.name.split('.').pop().toLowerCase()
+                    });
+                }
+            }
+            updateFileList();
+            showAlert(`✅ 已添加 ${files.length} 个文件`, 'success');
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileItems = document.getElementById('fileItems');
+            
+            if (uploadedFiles.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+
+            fileList.style.display = 'block';
+            fileItems.innerHTML = '';
+            
+            uploadedFiles.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <div class="file-info">
+                        <div>
+                            <div class="file-name">${item.name}</div>
+                            <div class="file-meta">${item.type.toUpperCase()} · ${formatFileSize(item.size)}</div>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-tiny btn-danger" onclick="removeFile(${index})">删除</button>
+                    </div>
+                `;
+                fileItems.appendChild(div);
+            });
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function clearAllFiles() {
+            uploadedFiles = [];
+            parsedData = [];
+            allColumns = [];
+            updateFileList();
+            document.getElementById('columnSelector').style.display = 'none';
+            document.getElementById('preview').style.display = 'none';
+            showAlert('已清空所有文件', 'info');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Parse files
+        async function parseAllFiles() {
+            if (uploadedFiles.length === 0) {
+                showAlert('❌ 请先上传文件', 'error');
+                return;
+            }
+
+            showAlert('⏳ 正在解析文件...', 'info');
+            parsedData = [];
+            allColumns = [];
+
+            for (let item of uploadedFiles) {
+                try {
+                    const data = await parseFile(item.file);
+                    parsedData.push({
+                        name: item.name,
+                        data: data
+                    });
+                    
+                    // Collect all columns
+                    if (data.length > 0) {
+                        const cols = Object.keys(data[0]);
+                        cols.forEach(col => {
+                            if (!allColumns.includes(col)) {
+                                allColumns.push(col);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    showAlert(`❌ 解析 ${item.name} 失败：${err.message}`, 'error');
+                }
+            }
+
+            if (parsedData.length > 0) {
+                showAlert(`✅ 成功解析 ${parsedData.length} 个文件`, 'success');
+                showColumnSelector();
+            }
+        }
+
+        function parseFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                const ext = file.name.split('.').pop().toLowerCase();
+
+                reader.onload = function(e) {
+                    try {
+                        let data = [];
+                        
+                        if (ext === 'csv' || ext === 'txt') {
+                            const text = e.target.result;
+                            const lines = text.split('\n').filter(line => line.trim());
+                            if (lines.length === 0) {
+                                resolve([]);
+                                return;
+                            }
+                            
+                            // Detect delimiter
+                            const firstLine = lines[0];
+                            let delimiter = ',';
+                            if (firstLine.includes('\t')) delimiter = '\t';
+                            else if (firstLine.includes(';')) delimiter = ';';
+                            else if (firstLine.includes('|')) delimiter = '|';
+                            
+                            const headers = lines[0].split(delimiter).map(h => h.trim());
+                            for (let i = 1; i < lines.length; i++) {
+                                const values = lines[i].split(delimiter).map(v => v.trim());
+                                let row = {};
+                                headers.forEach((h, idx) => {
+                                    row[h] = values[idx] || '';
+                                });
+                                data.push(row);
+                            }
+                        } else if (ext === 'xlsx' || ext === 'xls') {
+                            const workbook = XLSX.read(e.target.result, { type: 'array' });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            data = XLSX.utils.sheet_to_json(worksheet);
+                        }
+                        
+                        resolve(data);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+
+                reader.onerror = function() {
+                    reject(new Error('文件读取失败'));
+                };
+
+                if (ext === 'csv' || ext === 'txt') {
+                    // Try UTF-8 first, then GBK
+                    try {
+                        reader.readAsText(file, 'UTF-8');
+                    } catch (e) {
+                        reader.readAsText(file, 'GBK');
+                    }
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        }
+
+        // Column Selector
+        function showColumnSelector() {
+            const selector = document.getElementById('columnSelector');
+            const checkboxes = document.getElementById('columnCheckboxes');
+            const mergeOptions = document.getElementById('mergeOptions');
+            
+            selector.style.display = 'block';
+            checkboxes.innerHTML = '';
+            
+            allColumns.forEach(col => {
+                const div = document.createElement('div');
+                div.className = 'column-checkbox';
+                div.innerHTML = `
+                    <input type="checkbox" id="col_${col}" value="${col}">
+                    <label for="col_${col}">${col}</label>
+                `;
+                div.addEventListener('click', (e) => {
+                    if (e.target.type !== 'checkbox') {
+                        const cb = div.querySelector('input[type="checkbox"]');
+                        cb.checked = !cb.checked;
+                    }
+                    div.classList.toggle('selected', div.querySelector('input').checked);
+                });
+                checkboxes.appendChild(div);
+            });
+
+            // Show merge options if multiple files
+            if (parsedData.length > 1) {
+                mergeOptions.style.display = 'block';
+                document.getElementById('headerCheckRow').style.display = 'flex';
+            } else {
+                mergeOptions.style.display = 'none';
+            }
+        }
+
+        function selectAllColumns() {
+            document.querySelectorAll('#columnCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+                cb.parentElement.classList.add('selected');
+            });
+        }
+
+        function deselectAllColumns() {
+            document.querySelectorAll('#columnCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.parentElement.classList.remove('selected');
+            });
+        }
+
+        function invertSelection() {
+            document.querySelectorAll('#columnCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = !cb.checked;
+                cb.parentElement.classList.toggle('selected', cb.checked);
+            });
+        }
+
+        // Extract Data
+        function extractData() {
+            const selectedColumns = Array.from(document.querySelectorAll('#columnCheckboxes input[type="checkbox"]:checked')).map(cb => cb.value);
+            
+            if (selectedColumns.length === 0) {
+                showAlert('❌ 请至少选择一列', 'error');
+                return;
+            }
+
+            const mergeFiles = document.getElementById('mergeFiles').checked;
+            let extractedData = [];
+
+            if (mergeFiles && parsedData.length > 1) {
+                // Merge mode
+                const checkHeader = document.getElementById('checkHeader').checked;
+                
+                // Check header consistency
+                if (checkHeader) {
+                    const firstFileCols = new Set(Object.keys(parsedData[0].data[0] || {}));
+                    for (let i = 1; i < parsedData.length; i++) {
+                        const cols = new Set(Object.keys(parsedData[i].data[0] || {}));
+                        const missing = selectedColumns.filter(col => !cols.has(col));
+                        if (missing.length > 0) {
+                            showAlert(`⚠️ 文件 "${parsedData[i].name}" 缺少列：${missing.join(', ')}`, 'warning');
+                        }
+                    }
+                }
+
+                // Merge
+                parsedData.forEach(fileData => {
+                    fileData.data.forEach(row => {
+                        let newRow = {};
+                        selectedColumns.forEach(col => {
+                            newRow[col] = row[col] || '';
+                        });
+                        extractedData.push(newRow);
+                    });
+                });
+
+                showAlert(`✅ 已合并 ${parsedData.length} 个文件，共 ${extractedData.length} 行数据`, 'success');
+            } else {
+                // Single file mode (use first file)
+                const fileData = parsedData[0].data;
+                extractedData = fileData.map(row => {
+                    let newRow = {};
+                    selectedColumns.forEach(col => {
+                        newRow[col] = row[col] || '';
+                    });
+                    return newRow;
+                });
+
+                showAlert(`✅ 已提取 ${extractedData.length} 行数据`, 'success');
+            }
+
+            // Show preview
+            showPreview(extractedData, selectedColumns);
+        }
+
+        function showPreview(data, columns) {
+            const preview = document.getElementById('preview');
+            const table = document.getElementById('previewTable');
+            const stats = document.getElementById('previewStats');
+            const exportSection = document.getElementById('exportSection');
+            
+            preview.style.display = 'block';
+            exportSection.style.display = 'block';
+            
+            // Stats
+            stats.textContent = `共 ${data.length} 行数据 · ${columns.length} 列`;
+            
+            // Table
+            let html = '<thead><tr>';
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            const displayRows = Math.min(data.length, 100);
+            for (let i = 0; i < displayRows; i++) {
+                html += '<tr>';
+                columns.forEach(col => {
+                    html += `<td>${data[i][col] || ''}</td>`;
+                });
+                html += '</tr>';
+            }
+            
+            if (data.length > 100) {
+                html += '<tr><td colspan="' + columns.length + '" style="text-align: center; color: rgba(255,255,255,0.4);">... 仅显示前 100 行 ...</td></tr>';
+            }
+            
+            html += '</tbody>';
+            table.innerHTML = html;
+            
+            // Store for export
+            window.extractedData = data;
+            window.extractedColumns = columns;
+        }
+
+        // Export
+        function exportData() {
+            const data = window.extractedData;
+            const columns = window.extractedColumns;
+            const format = document.getElementById('exportFormat').value;
+            const fileName = document.getElementById('exportFileName').value || '提取结果';
+            
+            if (!data || data.length === 0) {
+                showAlert('❌ 没有数据可导出', 'error');
+                return;
+            }
+
+            try {
+                if (format === 'xlsx') {
+                    const ws = XLSX.utils.json_to_sheet(data, { header: columns });
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                    XLSX.writeFile(wb, `${fileName}.xlsx`);
+                } else if (format === 'csv') {
+                    const BOM = '\uFEFF';
+                    const csv = columns.join(',') + '\n' + data.map(row => 
+                        columns.map(col => `"${(row[col] || '').replace(/"/g, '""')}"`).join(',')
+                    ).join('\n');
+                    downloadFile(BOM + csv, `${fileName}.csv`, 'text/csv;charset=utf-8');
+                } else if (format === 'txt') {
+                    const txt = columns.join('\t') + '\n' + data.map(row => 
+                        columns.map(col => row[col] || '').join('\t')
+                    ).join('\n');
+                    downloadFile(txt, `${fileName}.txt`, 'text/plain;charset=utf-8');
+                }
+                
+                showAlert(`✅ 已导出 ${data.length} 行数据`, 'success');
+            } catch (err) {
+                showAlert(`❌ 导出失败：${err.message}`, 'error');
+            }
+        }
+
+        function downloadFile(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Alert
+        function showAlert(message, type) {
+            const alertArea = document.getElementById('alertArea');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertArea.innerHTML = '';
+            alertArea.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
