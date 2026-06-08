@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>集团4/5G两低两高质差小区数量计算 - 热心市民张三丰的工具箱</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23667eea'/%3E%3Cstop offset='100%25' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Crect x='12' y='16' width='40' height='32' rx='4' fill='none' stroke='white' stroke-width='2.5' opacity='0.9'/%3E%3Cline x1='12' y1='24' x2='52' y2='24' stroke='white' stroke-width='2.5' opacity='0.7'/%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ff6b6b'/%3E%3Ccircle cx='27' cy='20' r='2' fill='%23ffd93d'/%3E%3Ccircle cx='34' cy='20' r='2' fill='%236bcb77'/%3E%3Crect x='18' y='29' width='10' height='8' rx='2' fill='white' opacity='0.85'/%3E%3Crect x='31' y='29' width='15' height='8' rx='2' fill='white' opacity='0.6'/%3E%3Crect x='18' y='40' width='28' height='5' rx='2' fill='white' opacity='0.4'/%3E%3C/svg%3E">
+<script src="xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f0f1a;min-height:100vh;color:rgba(255,255,255,.9)}
+.header{background:linear-gradient(135deg,rgba(102,126,234,.2),rgba(118,75,162,.15));border-bottom:1px solid rgba(255,255,255,.08);padding:18px 0}
+.header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+.logo-section{display:flex;align-items:center;gap:12px}
+.logo{font-size:28px;text-decoration:none}
+.logo-text{color:rgba(255,255,255,.9);font-size:17px;font-weight:600}
+.logo-text span{color:rgba(255,255,255,.5);font-size:12px;font-weight:400}
+.back-link{color:rgba(102,126,234,.8);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;transition:color .3s}
+.back-link:hover{color:rgba(102,126,234,1)}
+.container{max-width:1400px;margin:0 auto;padding:24px}
+.page-title{font-size:24px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#667eea,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-desc{color:rgba(255,255,255,.45);font-size:13px;margin-bottom:20px;line-height:1.6}
+
+.steps{display:flex;gap:0;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.step-tab{flex:1;padding:14px 12px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,.02);border-right:1px solid rgba(255,255,255,.06);font-size:13px;font-weight:500;color:rgba(255,255,255,.4)}
+.step-tab:last-child{border-right:none}
+.step-tab.active{background:rgba(102,126,234,.15);color:rgba(167,139,250,1);font-weight:600}
+.step-tab.done{color:rgba(76,175,80,.8)}
+.step-num{display:inline-block;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);line-height:22px;text-align:center;font-size:11px;margin-right:6px;transition:all .3s}
+.step-tab.active .step-num{background:rgba(102,126,234,.3);color:#a78bfa}
+.step-tab.done .step-num{background:rgba(76,175,80,.2);color:#4caf50}
+
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px;margin-bottom:18px}
+.card-title{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:20px}
+
+.upload-area{border:2px dashed rgba(102,126,234,.35);border-radius:14px;padding:32px;text-align:center;background:rgba(255,255,255,.02);transition:all .3s;cursor:pointer;margin-bottom:16px}
+.upload-area:hover{border-color:rgba(102,126,234,.7);background:rgba(102,126,234,.06)}
+.upload-area.drag-over{border-color:#667eea;background:rgba(102,126,234,.1);transform:scale(1.01)}
+.upload-icon{font-size:40px;margin-bottom:10px}
+.upload-text{font-size:15px;color:rgba(102,126,234,.8);margin-bottom:6px}
+.upload-hint{color:rgba(255,255,255,.35);font-size:12px}
+.file-input{display:none}
+.file-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06);font-size:13px}
+.file-item .fname{color:rgba(255,255,255,.85);font-weight:500}
+.file-item .finfo{color:rgba(255,255,255,.35);font-size:12px;margin-left:8px}
+
+.btn{padding:9px 18px;border:none;border-radius:10px;font-size:14px;cursor:pointer;transition:all .3s;font-weight:500}
+.btn-primary{background:rgba(102,126,234,.2);color:rgba(102,126,234,1);border:1px solid rgba(102,126,234,.4)}
+.btn-primary:hover{background:rgba(102,126,234,.3);transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.3)}
+.btn-success{background:rgba(76,175,80,.2);color:#4caf50;border:1px solid rgba(76,175,80,.4)}
+.btn-success:hover{background:rgba(76,175,80,.3)}
+.btn-secondary{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
+.btn-tiny{padding:5px 12px;font-size:12px}
+.btn-sm{padding:7px 14px;font-size:13px}
+
+.form-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:5px;min-width:0}
+.form-group label{font-size:12px;color:rgba(255,255,255,.55);font-weight:500}
+select,input[type=text]{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.9);font-size:13px;outline:none;transition:all .3s;min-width:140px}
+select:focus,input:focus{border-color:rgba(102,126,234,.6)}
+select option{background:#1a1a2e;color:#fff}
+
+.tbl-wrap{overflow-x:auto;border-radius:10px;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:rgba(102,126,234,.12);color:rgba(167,139,250,.95);padding:9px 12px;text-align:left;font-weight:600;white-space:nowrap;border-bottom:2px solid rgba(102,126,234,.25);position:sticky;top:0}
+tbody td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.7)}
+tbody tr:hover{background:rgba(102,126,234,.05)}
+.num{font-family:"SF Mono",Consolas,monospace;color:rgba(130,204,255,.9);text-align:right}
+.highlight{color:#ff9800!important;font-weight:600}
+
+.alert{padding:11px 16px;border-radius:10px;margin-bottom:12px;font-size:13px}
+.alert-info{background:rgba(25,118,210,.08);color:#64b5f6;border:1px solid rgba(25,118,210,.25)}
+.alert-success{background:rgba(76,175,80,.08);color:#81c784;border:1px solid rgba(76,175,80,.25)}
+.alert-warning{background:rgba(255,152,0,.08);color:#ffb74d;border:1px solid rgba(255,152,0,.25)}
+
+.section{display:none}.section.active{display:block}
+
+.prov-selector{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;max-height:200px;overflow-y:auto;padding:8px;background:rgba(255,255,255,.02);border-radius:10px}
+.prov-chip{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .3s;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:rgba(255,255,255,.65);user-select:none}
+.prov-chip.selected{background:rgba(102,126,234,.2);border-color:rgba(102,126,234,.4);color:rgba(102,126,234,1)}
+.prov-chip:hover{border-color:rgba(102,126,234,.3)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+
+@media(max-width:768px){.form-row{flex-direction:column}}
+
+.spinner{display:none;width:32px;height:32px;margin:12px auto;border:3px solid rgba(102,126,234,.15);border-top:3px solid #667eea;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.upload-area.loading .upload-icon,
+.upload-area.loading .upload-text,
+.upload-area.loading .upload-hint{display:none}
+.upload-area.loading .spinner{display:block}
+
+.loading-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loading-mask.show{display:flex}
+.loading-mask .spinner{border:4px solid rgba(255,255,255,.1);border-top:4px solid #a78bfa;width:44px;height:44px}
+.loading-mask .txt{color:rgba(255,255,255,.7);font-size:14px}
+
+/* Data format indicator */
+.format-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px}
+.format-badge.multi{background:rgba(255,152,0,.15);color:#ffb74d;border:1px solid rgba(255,152,0,.3)}
+.format-badge.single{background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-content">
+    <div class="logo-section">
+      <span class="logo">📡</span>
+      <div class="logo-text">集团4/5G两低两高质差小区数量计算<span>离线工具 · 本地计算</span></div>
+    </div>
+    <a href="index.html" target="_blank" class="back-link">🏠 工具箱首页 ↗</a>
+  </div>
+</div>
+
+<div class="container">
+  <h1 class="page-title">集团4/5G两低两高质差小区数量计算</h1>
+  <p class="page-desc">
+    导入 VoLTE/VoNR 两低两高数据及工参文件，计算全国/各省/指定省份各地市、区县、厂家的质差小区数量。<br>
+    <strong>计算规则：</strong>接通/SRVCC/掉话/切换类 = count(distinct CGI) ÷ 30（取整）；上行/下行高丢包类 = count(distinct CGI)（去重计数）。<br>
+    <strong>支持两种数据格式：</strong>① XLSX多Sheet格式（每个指标一个Sheet）② CSV/TXT格式（含"是否…"标记列）。
+  </p>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step-tab active" data-step="1" onclick="goStep(1)"><span class="step-num">1</span>导入数据文件</div>
+    <div class="step-tab" data-step="2" onclick="goStep(2)"><span class="step-num">2</span>列映射配置</div>
+    <div class="step-tab" data-step="3" onclick="goStep(3)"><span class="step-num">3</span>选择计算模式</div>
+    <div class="step-tab" data-step="4" onclick="goStep(4)"><span class="step-num">4</span>查看计算结果</div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="section active" id="sec-1">
+    <div class="card">
+      <div class="card-title"><span class="icon">📂</span> 导入数据文件</div>
+      <div class="alert alert-info" style="margin-bottom:16px">
+        💡 支持两种数据格式：<br>
+        <strong>格式A（XLSX多Sheet）</strong>：如 VoLTE两低两高202512.xlsx，每个指标一个Sheet（低接通/低SRVCC/高掉话/上行高丢包/下行高丢包）<br>
+        <strong>格式B（CSV单文件）</strong>：如 12月-4G两高两低-上旬.csv，含"是否VoLTE低接通率小区"等标记列<br>
+        工参文件需含 CGI、地市、区县、厂家列（可选，用于地市/区县/厂家维度计算）。
+      </div>
+
+      <!-- VoLTE -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:14px;font-weight:600;color:rgba(102,126,234,.9);margin-bottom:8px">① VoLTE两低两高数据文件 <span id="fmtVoLTE"></span></div>
+        <div class="upload-area" id="upVoLTE" onclick="document.getElementById('fileVoLTE').click()">
+          <div class="upload-icon">📊</div>
+          <div class="upload-text">点击或拖拽上传 VoLTE 数据文件</div>
+          <div class="upload-hint">支持 .xlsx .xls .csv .txt</div>
+          <div class="spinner"></div>
+        </div>
+        <input type="file" id="fileVoLTE" class="file-input" accept=".xlsx,.xls,.csv,.txt" onchange="handleVolteFile(this)">
+        <div class="file-list" id="listVoLTE"></div>
+      </div>
+
+      <!-- VoNR -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:14px;font-weight:600;color:rgba(102,126,234,.9);margin-bottom:8px">② VoNR两低两高数据文件 <span id="fmtVoNR"></span></div>
+        <div class="upload-area" id="upVoNR" onclick="document.getElementById('fileVoNR').click()">
+          <div class="upload-icon">📶</div>
+          <div class="upload-text">点击或拖拽上传 VoNR 数据文件</div>
+          <div class="upload-hint">支持 .xlsx .xls .csv .txt</div>
+          <div class="spinner"></div>
+        </div>
+        <input type="file" id="fileVoNR" class="file-input" accept=".xlsx,.xls,.csv,.txt" onchange="handleVonrFile(this)">
+        <div class="file-list" id="listVoNR"></div>
+      </div>
+
+      <!-- 工参 -->
+      <div>
+        <div style="font-size:14px;font-weight:600;color:rgba(76,175,80,.9);margin-bottom:8px">③ 工参文件（可选，用于地市/区县/厂家维度）</div>
+        <div class="upload-area" id="upGongcan" onclick="document.getElementById('fileGongcan').click()">
+          <div class="upload-icon">🗺️</div>
+          <div class="upload-text">点击或拖拽上传工参文件（可多选）</div>
+          <div class="upload-hint">需包含 CGI、地市、区县、厂家 列</div>
+        </div>
+        <input type="file" id="fileGongcan" class="file-input" multiple accept=".xlsx,.xls,.csv,.txt" onchange="handleGongcanFiles(this)">
+        <div class="file-list" id="listGongcan"></div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="goStep(2)" id="btnToStep2" disabled>下一步：列映射配置 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="section" id="sec-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">🔧</span> 列映射配置</div>
+      <div class="alert alert-warning" style="margin-bottom:16px">
+        ⚠️ 系统已自动检测数据格式并匹配列名，如不正确请手动修改。
+      </div>
+      <div id="mappingContent"></div>
+      <div style="margin-top:18px;display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="goStep(1)">← 上一步</button>
+        <button class="btn btn-primary" onclick="validateMapping()">下一步：选择计算模式 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="section" id="sec-3">
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> 选择计算模式</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:20px">
+        <div class="card" style="cursor:pointer;border-color:rgba(102,126,234,.3)" onclick="selectMode('national')" id="modeCardA">
+          <div style="font-size:15px;font-weight:600;color:rgba(167,139,250,1);margin-bottom:8px">🌐 模式一：全国及各省计算</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+            以 province 列为维度，计算<strong>所有省份</strong>的质差小区数量及各子指标。<br>
+            <span style="color:rgba(76,175,80,.7);font-size:12px">✓ 无需工参文件</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="selectMode('province')" id="modeCardB">
+          <div style="font-size:15px;font-weight:600;color:rgba(167,139,250,1);margin-bottom:8px">📍 模式二：指定省份计算</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+            选择<strong>一个或多个省份</strong>，按地市/区县/厂家维度计算。<br>
+            <span style="color:rgba(255,152,0,.7);font-size:12px">⚠ 需要工参文件</span>
+          </div>
+        </div>
+      </div>
+      <div id="modeAOpts" style="display:none;margin-bottom:18px">
+        <div class="alert alert-info">将计算所有省份的质差小区数量。点击"开始计算"执行。</div>
+      </div>
+      <div id="modeBOpts" style="display:none;margin-bottom:18px">
+        <div class="alert alert-warning" id="gongcanWarn" style="display:none">⚠️ 未检测到工参文件。请返回 Step 1 导入。</div>
+        <div id="gongcanInfo" style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px"></div>
+        <div id="gongcanOK">
+          <div style="font-size:14px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.7)">选择省份：</div>
+          <div class="prov-selector" id="provSelector"></div>
+          <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn btn-tiny btn-secondary" onclick="selectAllProv()">全选</button><button class="btn btn-tiny btn-secondary" onclick="deselectAllProv()">全不选</button></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.7)">选择计算维度：</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="dimCity" checked> 按地市</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="dimDistrict" checked> 按区县</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="dimVendor" checked> 按厂家</label>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="goStep(2)">← 上一步</button>
+        <button class="btn btn-success" onclick="startCalculation()" id="btnCalc" disabled>▶ 开始计算</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="section" id="sec-4">
+    <div class="card" id="resultWrap">
+      <div class="card-title"><span class="icon">📈</span> 计算结果 <span id="resultModeLabel" style="font-size:12px;color:rgba(167,139,250,.7);font-weight:400"></span></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-primary" onclick="exportResult()">📥 导出 Excel</button>
+        <button class="btn btn-sm btn-secondary" onclick="exportResultCSV()">📥 导出 CSV</button>
+        <button class="btn btn-sm btn-secondary" onclick="goStep(3)">← 重新计算</button>
+      </div>
+      <div id="resultContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading mask -->
+<div class="loading-mask" id="loadingMask">
+  <div class="spinner"></div>
+  <div class="txt" id="loadingText">计算中...</div>
+</div>
+
+<script>
+// ========== State ==========
+// Data format: 'multi-sheet' (xlsx with per-indicator sheets) or 'single-sheet' (csv with flag columns)
+let volteFormat = null;  // 'multi-sheet' | 'single-sheet'
+let vonrFormat = null;
+// Multi-sheet: { name, format:'multi-sheet', sheets: { sheetName: {headers, rows} } }
+// Single-sheet: { name, format:'single-sheet', headers, rows, encoding }
+let volteData = null;
+let vonrData = null;
+let gongcanData = [];   // [{name, headers, rows, encoding}]
+// 4G和5G工参分开存储
+let gongcan4G = [];     // [{name, headers, rows}]
+let gongcan5G = [];     // [{name, headers, rows}]
+let currentMode = null;
+let calcResult = null;
+
+// Category definitions
+// VoLTE categories: 接通/SRVCC/掉话 → ÷30; 丢包 → count distinct
+const VOLTE_DIV30_CATS = ['低接通','低SRVCC','高掉话'];
+const VOLTE_COUNT_CATS = ['上行高丢包','下行高丢包'];
+const VOLTE_ALL_CATS = [...VOLTE_DIV30_CATS, ...VOLTE_COUNT_CATS];
+
+// VoNR categories: 接通/切换/掉话 → ÷30; 丢包 → count distinct
+const VONR_DIV30_CATS = ['VoNR低接通','ViNR低接通','VoNR低切换','ViNR低切换','vonr低切换','vinr低切换','NR低切换','VoNR高掉话','ViNR高掉话'];
+const VONR_COUNT_CATS = ['上行高丢包','下行高丢包'];
+const VONR_ALL_CATS = [...VONR_DIV30_CATS, ...VONR_COUNT_CATS];
+
+// Sheet name to category mapping for VoLTE multi-sheet
+// Keys are prefixes/patterns to match against actual sheet names
+const VOLTE_SHEET_PATTERNS = [
+  { pattern: /^低接通/i, cat: '低接通' },
+  { pattern: /^低SRVCC/i, cat: '低SRVCC' },
+  { pattern: /^高掉话/i, cat: '高掉话' },
+  { pattern: /^上行高丢包/i, cat: '上行高丢包' },
+  { pattern: /^下行高丢包/i, cat: '下行高丢包' },
+];
+
+// Legacy exact match map for backward compatibility
+const VOLTE_SHEET_MAP = {
+  '低接通': '低接通',
+  '低SRVCC': '低SRVCC',
+  '高掉话1': '高掉话',
+  '高掉话2': '高掉话',
+  '上行高丢包': '上行高丢包',
+  '下行高丢包': '下行高丢包',
+};
+
+// Helper: get category from sheet name using pattern matching
+function getVolteCategory(sheetName) {
+  // Try exact match first
+  if (VOLTE_SHEET_MAP[sheetName]) return VOLTE_SHEET_MAP[sheetName];
+  // Try pattern match
+  for (const { pattern, cat } of VOLTE_SHEET_PATTERNS) {
+    if (pattern.test(sheetName)) return cat;
+  }
+  return null;
+}
+
+// Sheet name to category mapping for VoNR multi-sheet
+// Keys are prefixes/patterns to match against actual sheet names
+const VONR_SHEET_PATTERNS = [
+  { pattern: /VoNR.*低接通/i, cat: 'VoNR低接通' },
+  { pattern: /ViNR.*低接通/i, cat: 'ViNR低接通' },
+  { pattern: /VoNR.*低切换/i, cat: 'VoNR低切换' },
+  { pattern: /ViNR.*低切换/i, cat: 'ViNR低切换' },
+  { pattern: /vonr.*低切换/i, cat: 'vonr低切换' },
+  { pattern: /vinr.*低切换/i, cat: 'vinr低切换' },
+  { pattern: /NR.*低切换/i, cat: 'NR低切换' },
+  { pattern: /VoNR.*高掉话/i, cat: 'VoNR高掉话' },
+  { pattern: /ViNR.*高掉话/i, cat: 'ViNR高掉话' },
+  { pattern: /上行高丢包/i, cat: '上行高丢包' },
+  { pattern: /下行高丢包/i, cat: '下行高丢包' },
+];
+
+// Legacy exact match map for backward compatibility
+const VONR_SHEET_MAP = {
+  'VoNR低接通': 'VoNR低接通',
+  'ViNR低接通': 'ViNR低接通',
+  'vonr低切换1': 'vonr低切换',
+  'vonr低切换': 'vonr低切换',
+  'vinr低切换': 'vinr低切换',
+  'VoNR高掉话1': 'VoNR高掉话',
+  'VoNR高掉话': 'VoNR高掉话',
+  'ViNR高掉话': 'ViNR高掉话',
+  '上行高丢包': '上行高丢包',
+  '下行高丢包': '下行高丢包',
+};
+
+// Helper: get category from sheet name using pattern matching
+function getVonrCategory(sheetName) {
+  // Try exact match first
+  if (VONR_SHEET_MAP[sheetName]) return VONR_SHEET_MAP[sheetName];
+  // Try pattern match
+  for (const { pattern, cat } of VONR_SHEET_PATTERNS) {
+    if (pattern.test(sheetName)) return cat;
+  }
+  return null;
+}
+
+// Mapping for CSV "是否" flag columns → category
+const VOLTE_FLAG_MAP = {
+  '是否VoLTE低接通率小区': '低接通',
+  '是否低SRVCC无线切换成功率小区': '低SRVCC',
+  '是否VoLTE高ERAB掉线率小区': '高掉话',
+  '是否VoLTE上行高丢包小区': '上行高丢包',
+  '是否VoLTE下行高丢包小区': '下行高丢包',
+};
+const VONR_FLAG_MAP = {
+  '是否VoNR低接通小区': 'VoNR低接通',
+  '是否ViNR低接通小区': 'ViNR低接通',
+  '是否低VoNR到VoLTE的系统间切换出成功率小区': 'vonr低切换',
+  '是否低ViNR到ViLTE的系统间切换出成功率小区': 'vinr低切换',
+  '是否VoNR高掉话小区': 'VoNR高掉话',
+  '是否ViNR高掉话小区': 'ViNR高掉话',
+  '是否VoNR上行高丢包小区': '上行高丢包',
+  '是否VoNR下行高丢包小区': '下行高丢包',
+};
+
+// ========== Encoding ==========
+function detectEncoding(buf) {
+  const peek = new Uint8Array(buf.slice(0, 8192));
+  if (peek[0]===0xEF && peek[1]===0xBB && peek[2]===0xBF) return 'UTF-8';
+  if (peek[0]===0xFF && peek[1]===0xFE) return 'UTF-16LE';
+  try { const t=new TextDecoder('utf-8').decode(peek); if(!t.includes('\uFFFD')) return 'UTF-8'; } catch(e){}
+  try { const t=new TextDecoder('gbk').decode(peek); if(!t.includes('\uFFFD')) return 'GBK'; } catch(e){}
+  return 'UTF-8';
+}
+function detectDelim(text) {
+  const L = text.split('\n')[0]||'';
+  let best=',',n=0;
+  for(const [d] of [[';'],['\t'],['|']]) { const m=(L.match(new RegExp(d===';' ? ';' : d==='\t' ? '\t' : '\\|','g'))||[]).length; if(m>n){n=m;best=d} }
+  return best;
+}
+
+// ========== File reading ==========
+function readXLSXMultiSheet(file) {
+  return file.arrayBuffer().then(buf => {
+    const wb = XLSX.read(buf, {type:'array'});
+    const sheets = {};
+    for (const sn of wb.SheetNames) {
+      const ws = wb.Sheets[sn];
+      const jsonData = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if (!jsonData.length) continue;
+      const headers = Object.keys(jsonData[0]).map(h=>String(h).trim());
+      const rows = jsonData.map(row => {
+        const o = {};
+        for (const [k,v] of Object.entries(row)) { const key=String(k).trim(); o[key]=(v===null||v===undefined)?'':String(v).trim(); }
+        return o;
+      }).filter(o => headers.some(h => (o[h]||'')!==''));
+      sheets[sn] = {headers, rows};
+    }
+    return {name: file.name, format:'multi-sheet', sheets};
+  });
+}
+
+function readCSV(file) {
+  return file.arrayBuffer().then(buf => {
+    const enc = detectEncoding(buf);
+    const dec = new TextDecoder(enc==='GBK'||enc==='GB2312'?'gbk':'utf-8');
+    let text = dec.decode(buf);
+    const delim = detectDelim(text);
+    const lines = text.split(/\r?\n/).filter(l=>l.trim());
+    if (!lines.length) return {name:file.name, format:'single-sheet', headers:[], rows:[], encoding:enc};
+    const headers = lines[0].split(delim).map(h=>h.trim().replace(/^["']|["']$/g,''));
+    const rows=[];
+    for(let i=1;i<lines.length;i++) {
+      const v=lines[i].split(delim).map(v2=>v2.trim().replace(/^["']|["']$/g,''));
+      if(v.length>=headers.length) {
+        const o={}; headers.forEach((h,ci)=>o[h]=v[ci]??'');
+        rows.push(o);
+      }
+    }
+    return {name:file.name, format:'single-sheet', headers, rows, encoding:enc};
+  });
+}
+
+// Detect format from CSV headers
+function detectCSVFormat(headers) {
+  // Check for VoLTE flag columns
+  const volteFlags = Object.keys(VOLTE_FLAG_MAP);
+  const vonrFlags = Object.keys(VONR_FLAG_MAP);
+  const hLower = headers.map(h=>h.trim());
+  const volteMatch = volteFlags.filter(f => hLower.includes(f)).length;
+  const vonrMatch = vonrFlags.filter(f => hLower.includes(f)).length;
+  if (volteMatch >= 2) return 'volte';
+  if (vonrMatch >= 2) return 'vonr';
+  return null;
+}
+
+// Detect format from XLSX sheet names
+function detectXLSXFormat(sheetNames) {
+  const volteSheets = Object.keys(VOLTE_SHEET_MAP);
+  const vonrSheets = Object.keys(VONR_SHEET_MAP);
+  const volteMatch = sheetNames.filter(s => volteSheets.includes(s)).length;
+  const vonrMatch = sheetNames.filter(s => vonrSheets.includes(s)).length;
+  if (volteMatch >= 2) return 'volte';
+  if (vonrMatch >= 2) return 'vonr';
+  return null;
+}
+
+// ========== File handlers ==========
+async function handleVolteFile(input) {
+  const file = input.files[0]; if(!file) return;
+  showLoading('读取VoLTE数据...');
+  try {
+    if (file.name.match(/\.xlsx?$/i)) {
+      const data = await readXLSXMultiSheet(file);
+      const sheetType = detectXLSXFormat(Object.keys(data.sheets));
+      if (sheetType === 'vonr') {
+        // User uploaded VoNR file as VoLTE - auto-swap
+        hideLoading();
+        if (confirm('检测到此文件为 VoNR 数据，是否自动填入 VoNR 位置？')) {
+          vonrData = data; vonrFormat = 'multi-sheet';
+          renderFileList('listVoNR', [data], 'multi-sheet');
+          document.getElementById('fmtVoNR').innerHTML = '<span class="format-badge multi">多Sheet</span>';
+        }
+        input.value=''; return;
+      }
+      volteData = data; volteFormat = 'multi-sheet';
+      renderFileList('listVoLTE', [data], 'multi-sheet');
+      document.getElementById('fmtVoLTE').innerHTML = '<span class="format-badge multi">多Sheet</span>';
+    } else {
+      const data = await readCSV(file);
+      const csvType = detectCSVFormat(data.headers);
+      if (csvType === 'vonr') {
+        hideLoading();
+        if (confirm('检测到此文件为 VoNR 数据，是否自动填入 VoNR 位置？')) {
+          vonrData = data; vonrFormat = 'single-sheet';
+          renderFileList('listVoNR', [data], 'single-sheet');
+          document.getElementById('fmtVoNR').innerHTML = '<span class="format-badge single">单Sheet</span>';
+        }
+        input.value=''; return;
+      }
+      volteData = data; volteFormat = 'single-sheet';
+      renderFileList('listVoLTE', [data], 'single-sheet');
+      document.getElementById('fmtVoLTE').innerHTML = '<span class="format-badge single">单Sheet</span>';
+    }
+    checkStep1Done();
+  } catch(e) { alert('读取失败: '+e.message); }
+  finally { hideLoading(); input.value=''; }
+}
+
+async function handleVonrFile(input) {
+  const file = input.files[0]; if(!file) return;
+  showLoading('读取VoNR数据...');
+  try {
+    if (file.name.match(/\.xlsx?$/i)) {
+      const data = await readXLSXMultiSheet(file);
+      const sheetType = detectXLSXFormat(Object.keys(data.sheets));
+      if (sheetType === 'volte') {
+        hideLoading();
+        if (confirm('检测到此文件为 VoLTE 数据，是否自动填入 VoLTE 位置？')) {
+          volteData = data; volteFormat = 'multi-sheet';
+          renderFileList('listVoLTE', [data], 'multi-sheet');
+          document.getElementById('fmtVoLTE').innerHTML = '<span class="format-badge multi">多Sheet</span>';
+        }
+        input.value=''; return;
+      }
+      vonrData = data; vonrFormat = 'multi-sheet';
+      renderFileList('listVoNR', [data], 'multi-sheet');
+      document.getElementById('fmtVoNR').innerHTML = '<span class="format-badge multi">多Sheet</span>';
+    } else {
+      const data = await readCSV(file);
+      const csvType = detectCSVFormat(data.headers);
+      if (csvType === 'volte') {
+        hideLoading();
+        if (confirm('检测到此文件为 VoLTE 数据，是否自动填入 VoLTE 位置？')) {
+          volteData = data; volteFormat = 'single-sheet';
+          renderFileList('listVoLTE', [data], 'single-sheet');
+          document.getElementById('fmtVoLTE').innerHTML = '<span class="format-badge single">单Sheet</span>';
+        }
+        input.value=''; return;
+      }
+      vonrData = data; vonrFormat = 'single-sheet';
+      renderFileList('listVoNR', [data], 'single-sheet');
+      document.getElementById('fmtVoNR').innerHTML = '<span class="format-badge single">单Sheet</span>';
+    }
+    checkStep1Done();
+  } catch(e) { alert('读取失败: '+e.message); }
+  finally { hideLoading(); input.value=''; }
+}
+
+async function handleGongcanFiles(input) {
+  const files = [...input.files]; if(!files.length) return;
+  showLoading('读取工参数据...');
+  try {
+    // 分开4G和5G工参
+    const gc4G = [], gc5G = [];
+    
+    for (const f of files) {
+      const fname = f.name.toLowerCase();
+      const is5G = fname.includes('5g') || fname.includes('五G') || 
+                   fname.includes('nr') || fname.includes('5g小区');
+      const data = f.name.match(/\.xlsx?$/i) 
+        ? await readXLSX(f) 
+        : await readCSV(f);
+      
+      if (is5G) gc5G.push(data);
+      else gc4G.push(data);
+    }
+    
+    gongcan4G = gc4G;
+    gongcan5G = gc5G;
+    
+    // 显示工参信息
+    const gc4Info = gc4G.length ? `4G工参: ${gc4G.map(g=>g.name).join(', ')}` : '无4G工参';
+    const gc5Info = gc5G.length ? `5G工参: ${gc5G.map(g=>g.name).join(', ')}` : '无5G工参';
+    document.getElementById('gongcanInfo').innerHTML = `📋 ${gc4Info}<br>📋 ${gc5Info}`;
+    document.getElementById('gongcanWarn').style.display = 'none';
+    document.getElementById('gongcanOK').style.display = gc4G.length || gc5G.length ? 'block' : 'none';
+    populateProvSelector();
+  } catch(e) { alert('读取失败: '+e.message); }
+  finally { hideLoading(); input.value=''; }
+}
+
+// 读取单个xlsx文件
+async function readXLSX(file) {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array'});
+  const sn = wb.SheetNames[0];
+  const ws = wb.Sheets[sn];
+  const jsonData = XLSX.utils.sheet_to_json(ws, {defval:''});
+  const headers = jsonData.length ? Object.keys(jsonData[0]).map(h=>String(h).replace(/^\uFEFF/,'').trim()) : [];
+  const rows = jsonData.map(row=>{
+    const o={}; for(const [k,v] of Object.entries(row)){
+      const key=String(k).replace(/^\uFEFF/,'').trim();
+      o[key]=(v===null||v===undefined)?'':String(v).trim();
+    }return o;
+  });
+  return {name:file.name+' (Sheet: '+sn+')', headers, rows, encoding:'UTF-8'};
+}
+
+function renderFileList(domId, dataArr, fmt) {
+  const el=document.getElementById(domId);
+  el.innerHTML = dataArr.map(d => {
+    let info = '';
+    if (fmt === 'multi-sheet') {
+      const sheetInfo = Object.entries(d.sheets).map(([sn,sd])=>`${sn}(${sd.rows.length}行)`).join(' · ');
+      info = `多Sheet: ${sheetInfo}`;
+    } else {
+      info = `${d.headers.length}列 · ${d.rows.length}行`;
+    }
+    return `<div class="file-item"><span class="fname">📄 ${d.name}</span><span class="finfo">· ${info}</span></div>`;
+  }).join('');
+}
+
+function renderGongcanList() {
+  const el=document.getElementById('listGongcan');
+  el.innerHTML = gongcanData.map(d=>`<div class="file-item"><span class="fname">📄 ${d.name}</span><span class="finfo">· ${d.headers.length}列 · ${d.rows.length}行</span></div>`).join('');
+}
+
+function checkStep1Done() {
+  document.getElementById('btnToStep2').disabled = !(volteData && vonrData);
+}
+
+// ========== Steps ==========
+function goStep(n) {
+  document.querySelectorAll('.step-tab').forEach(t=>{ t.classList.remove('active'); if(+t.dataset.step<n) t.classList.add('done'); });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.step-tab[data-step="${n}"]`).classList.add('active');
+  document.getElementById('sec-'+n).classList.add('active');
+  if(n===2) populateMapping();
+  if(n===3) { currentMode=null; document.getElementById('btnCalc').disabled=true; document.getElementById('modeAOpts').style.display='none'; document.getElementById('modeBOpts').style.display='none'; document.getElementById('modeCardA').style.borderColor='rgba(102,126,234,.3)'; document.getElementById('modeCardB').style.borderColor='rgba(255,255,255,.08)'; }
+}
+
+// ========== Mapping ==========
+function populateMapping() {
+  const wrap = document.getElementById('mappingContent');
+  let html = '';
+
+  // VoLTE mapping
+  html += `<div style="margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.06)">`;
+  html += `<div style="font-size:15px;font-weight:600;color:rgba(102,126,234,.85);margin-bottom:12px">📊 VoLTE 数据映射 <span class="format-badge ${volteFormat==='multi-sheet'?'multi':'single'}">${volteFormat==='multi-sheet'?'多Sheet':'单Sheet'}</span></div>`;
+
+  if (volteFormat === 'multi-sheet') {
+    // Multi-sheet: auto-mapped by sheet names, just show detected mapping
+    const sheets = volteData.sheets;
+    const mapped = {};
+    const unmapped = [];
+    for (const [sn, sd] of Object.entries(sheets)) {
+      const cat = getVolteCategory(sn);
+      if (cat) {
+        if (!mapped[cat]) mapped[cat] = [];
+        mapped[cat].push({sheet: sn, rows: sd.rows.length});
+      } else {
+        unmapped.push(sn);
+      }
+    }
+    let mapMsgV = `✅ 已自动识别 ${Object.keys(sheets).length} 个Sheet`;
+    if (unmapped.length) mapMsgV += `，其中 ${unmapped.length} 个未匹配: ${unmapped.join(', ')}`;
+    html += `<div class="alert alert-success" style="margin-bottom:12px">${mapMsgV}</div>`;
+    html += `<table style="width:100%;margin-bottom:8px;text-align:left"><thead><tr><th style="text-align:left">指标类别</th><th style="text-align:left">Sheet名</th><th style="text-align:right">数据行数</th></tr></thead><tbody>`;
+    for (const cat of VOLTE_ALL_CATS) {
+      if (mapped[cat]) {
+        for (const m of mapped[cat]) {
+          html += `<tr><td style="text-align:left">${cat}</td><td style="text-align:left">${m.sheet}</td><td class="num" style="text-align:right">${m.rows.toLocaleString()}</td></tr>`;
+        }
+      } else {
+        html += `<tr><td style="text-align:left">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:left">未找到</td><td style="text-align:right">-</td></tr>`;
+      }
+    }
+    html += `</tbody></table>`;
+
+    // CGI and province column selection (from first available sheet)
+    const firstSheet = Object.values(sheets)[0];
+    const colOpts = firstSheet ? makeOpts(firstSheet.headers) : '';
+    html += `<div class="form-row" style="margin-top:12px">`;
+    html += `<div class="form-group"><label>CGI 列</label><select id="mVolte_cgi">${colOpts}</select></div>`;
+    html += `<div class="form-group"><label>province 列</label><select id="mVolte_prov">${colOpts}</select></div>`;
+    html += `</div>`;
+  } else {
+    // Single-sheet: need to map flag columns
+    const headers = volteData.headers;
+    const colOpts = makeOpts(headers);
+    html += `<div class="form-row"><div class="form-group"><label>CGI 列</label><select id="mVolte_cgi">${colOpts}</select></div>`;
+    html += `<div class="form-group"><label>province 列</label><select id="mVolte_prov">${colOpts}</select></div></div>`;
+    html += `<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin:12px 0 8px">— 指标标记列（自动匹配"是否…"列）—</div>`;
+    html += `<div class="form-row">`;
+    for (const cat of VOLTE_ALL_CATS) {
+      html += `<div class="form-group"><label>${cat} 列</label><select id="mVolte_${cat}">${colOpts}</select></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // VoNR mapping
+  html += `<div style="margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.06)">`;
+  html += `<div style="font-size:15px;font-weight:600;color:rgba(102,126,234,.85);margin-bottom:12px">📶 VoNR 数据映射 <span class="format-badge ${vonrFormat==='multi-sheet'?'multi':'single'}">${vonrFormat==='multi-sheet'?'多Sheet':'单Sheet'}</span></div>`;
+
+  if (vonrFormat === 'multi-sheet') {
+    const sheets = vonrData.sheets;
+    const mapped = {};
+    const unmapped = [];
+    for (const [sn, sd] of Object.entries(sheets)) {
+      const cat = getVonrCategory(sn);
+      if (cat) {
+        if (!mapped[cat]) mapped[cat] = [];
+        mapped[cat].push({sheet: sn, rows: sd.rows.length});
+      } else {
+        unmapped.push(sn);
+      }
+    }
+    let mapMsg = `✅ 已自动识别 ${Object.keys(sheets).length} 个Sheet`;
+    if (unmapped.length) mapMsg += `，其中 ${unmapped.length} 个未匹配: ${unmapped.join(', ')}`;
+    html += `<div class="alert alert-success" style="margin-bottom:12px">${mapMsg}</div>`;
+    html += `<table style="width:100%;margin-bottom:8px;text-align:left"><thead><tr><th style="text-align:left">指标类别</th><th style="text-align:left">Sheet名</th><th style="text-align:right">数据行数</th></tr></thead><tbody>`;
+    for (const cat of VONR_ALL_CATS) {
+      if (mapped[cat]) {
+        for (const m of mapped[cat]) {
+          html += `<tr><td style="text-align:left">${cat}</td><td style="text-align:left">${m.sheet}</td><td class="num" style="text-align:right">${m.rows.toLocaleString()}</td></tr>`;
+        }
+      } else {
+        html += `<tr><td style="text-align:left">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:left">未找到</td><td style="text-align:right">-</td></tr>`;
+      }
+    }
+    html += `</tbody></table>`;
+
+    const firstSheet = Object.values(sheets)[0];
+    const colOpts = firstSheet ? makeOpts(firstSheet.headers) : '';
+    html += `<div class="form-row" style="margin-top:12px">`;
+    html += `<div class="form-group"><label>CGI 列</label><select id="mVonr_cgi">${colOpts}</select></div>`;
+    html += `<div class="form-group"><label>province 列</label><select id="mVonr_prov">${colOpts}</select></div>`;
+    html += `</div>`;
+  } else {
+    const headers = vonrData.headers;
+    const colOpts = makeOpts(headers);
+    html += `<div class="form-row"><div class="form-group"><label>CGI 列</label><select id="mVonr_cgi">${colOpts}</select></div>`;
+    html += `<div class="form-group"><label>province 列</label><select id="mVonr_prov">${colOpts}</select></div></div>`;
+    html += `<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin:12px 0 8px">— 指标标记列 —</div>`;
+    html += `<div class="form-row">`;
+    for (const cat of VONR_ALL_CATS) {
+      html += `<div class="form-group"><label>${cat} 列</label><select id="mVonr_${cat}">${colOpts}</select></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // 工参映射
+  html += `<div>`;
+  html += `<div style="font-size:15px;font-weight:600;color:rgba(76,175,80,.85);margin-bottom:12px">🗺️ 工参数据列映射</div>`;
+  if (gongcanData.length > 0) {
+    const allH = gongcanData[0].headers;
+    const gcOpts = makeOpts(allH);
+    html += `<div class="form-row">`;
+    html += `<div class="form-group"><label>CGI 列</label><select id="mGC_cgi">${gcOpts}</select></div>`;
+    html += `<div class="form-group"><label>地市 列</label><select id="mGC_city">${gcOpts}</select></div>`;
+    html += `<div class="form-group"><label>区县 列</label><select id="mGC_district">${gcOpts}</select></div>`;
+    html += `<div class="form-group"><label>厂家 列</label><select id="mGC_vendor">${gcOpts}</select></div>`;
+    html += `</div>`;
+  } else {
+    html += `<div class="alert alert-info">未导入工参文件（可选，模式二需要）</div>`;
+  }
+  html += `</div>`;
+
+  wrap.innerHTML = html;
+
+  // Auto-select columns
+  if (volteFormat === 'multi-sheet') {
+    const firstSheet = Object.values(volteData.sheets)[0];
+    if (firstSheet) {
+      autoSel(firstSheet.headers, 'mVolte_cgi', ['cgi','CGI']);
+      autoSel(firstSheet.headers, 'mVolte_prov', ['province','省份']);
+    }
+  } else {
+    autoSel(volteData.headers, 'mVolte_cgi', ['cgi','CGI']);
+    autoSel(volteData.headers, 'mVolte_prov', ['province','省份','地市']);
+    // Auto-map flag columns
+    for (const [flagCol, cat] of Object.entries(VOLTE_FLAG_MAP)) {
+      const el = document.getElementById('mVolte_'+cat);
+      if (el) {
+        const found = volteData.headers.find(h => h.trim() === flagCol || h.trim().includes(flagCol));
+        if (found) el.value = found;
+      }
+    }
+  }
+
+  if (vonrFormat === 'multi-sheet') {
+    const firstSheet = Object.values(vonrData.sheets)[0];
+    if (firstSheet) {
+      autoSel(firstSheet.headers, 'mVonr_cgi', ['cgi','CGI']);
+      autoSel(firstSheet.headers, 'mVonr_prov', ['province','省份']);
+    }
+  } else {
+    autoSel(vonrData.headers, 'mVonr_cgi', ['cgi','CGI']);
+    autoSel(vonrData.headers, 'mVonr_prov', ['province','省份','地市']);
+    for (const [flagCol, cat] of Object.entries(VONR_FLAG_MAP)) {
+      const el = document.getElementById('mVonr_'+cat);
+      if (el) {
+        const found = vonrData.headers.find(h => h.trim() === flagCol || h.trim().includes(flagCol));
+        if (found) el.value = found;
+      }
+    }
+  }
+
+  if (gongcanData.length > 0) {
+    autoSel(gongcanData[0].headers, 'mGC_cgi', ['cgi','CGI']);
+    autoSel(gongcanData[0].headers, 'mGC_city', ['地市','城市']);
+    autoSel(gongcanData[0].headers, 'mGC_district', ['区县']);
+    autoSel(gongcanData[0].headers, 'mGC_vendor', ['厂家','厂商','设备厂商']);
+  }
+}
+
+function makeOpts(headers) {
+  return '<option value="">-- 请选择 --</option>' + headers.map(h=>`<option value="${escA(h)}">${escH(h)}</option>`).join('');
+}
+
+function autoSel(headers, selId, keywords) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  for (const kw of keywords) {
+    const found = headers.find(h => h.toLowerCase().includes(kw.toLowerCase()));
+    if (found) { sel.value = found; break; }
+  }
+}
+
+function validateMapping() {
+  // Check CGI and province columns exist
+  const cgiEl = document.getElementById('mVolte_cgi');
+  const provEl = document.getElementById('mVolte_prov');
+  if (cgiEl && !cgiEl.value) { alert('请选择 VoLTE CGI 列'); return; }
+  if (provEl && !provEl.value) { alert('请选择 VoLTE province 列'); return; }
+
+  const cgiEl2 = document.getElementById('mVonr_cgi');
+  const provEl2 = document.getElementById('mVonr_prov');
+  if (cgiEl2 && !cgiEl2.value) { alert('请选择 VoNR CGI 列'); return; }
+  if (provEl2 && !provEl2.value) { alert('请选择 VoNR province 列'); return; }
+
+  // For single-sheet, check flag column mappings
+  if (volteFormat === 'single-sheet') {
+    for (const cat of VOLTE_ALL_CATS) {
+      const el = document.getElementById('mVolte_'+cat);
+      if (el && !el.value) { alert(`请选择 VoLTE "${cat}" 列`); return; }
+    }
+  }
+  if (vonrFormat === 'single-sheet') {
+    for (const cat of VONR_ALL_CATS) {
+      const el = document.getElementById('mVonr_'+cat);
+      if (el && !el.value) { alert(`请选择 VoNR "${cat}" 列`); return; }
+    }
+  }
+
+  // Check gongcan mapping if imported
+  if (gongcanData.length > 0) {
+    const gcReq = [['mGC_cgi','CGI'],['mGC_city','地市'],['mGC_district','区县'],['mGC_vendor','厂家']];
+    for (const [id, label] of gcReq) {
+      const el = document.getElementById(id);
+      if (el && !el.value) { alert(`请选择工参 "${label}" 列`); return; }
+    }
+  }
+  goStep(3);
+}
+
+// ========== Mode selection ==========
+function selectMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeCardA').style.borderColor = mode==='national'?'rgba(102,126,234,.5)':'rgba(255,255,255,.08)';
+  document.getElementById('modeCardB').style.borderColor = mode==='province'?'rgba(102,126,234,.5)':'rgba(255,255,255,.08)';
+  document.getElementById('modeAOpts').style.display = mode==='national'?'block':'none';
+  document.getElementById('modeBOpts').style.display = mode==='province'?'block':'none';
+  document.getElementById('btnCalc').disabled = false;
+  if (mode==='province') {
+    if (!gongcanData.length) {
+      document.getElementById('gongcanWarn').style.display='block';
+      document.getElementById('gongcanOK').style.display='none';
+      document.getElementById('btnCalc').disabled=true;
+    } else {
+      document.getElementById('gongcanWarn').style.display='none';
+      document.getElementById('gongcanOK').style.display='block';
+      populateProvSelector();
+    }
+  }
+}
+
+function populateProvSelector() {
+  const provSet = new Set();
+  if (volteFormat === 'multi-sheet') {
+    const cgiCol = document.getElementById('mVolte_cgi')?.value || 'cgi';
+    const provCol = document.getElementById('mVolte_prov')?.value || 'province';
+    for (const sd of Object.values(volteData.sheets)) {
+      for (const r of sd.rows) { const v=(r[provCol]||'').trim(); if(v) provSet.add(v); }
+    }
+  } else if (volteData) {
+    const provCol = document.getElementById('mVolte_prov')?.value || 'province';
+    for (const r of volteData.rows) { const v=(r[provCol]||'').trim(); if(v) provSet.add(v); }
+  }
+  if (vonrFormat === 'multi-sheet') {
+    const provCol = document.getElementById('mVonr_prov')?.value || 'province';
+    for (const sd of Object.values(vonrData.sheets)) {
+      for (const r of sd.rows) { const v=(r[provCol]||'').trim(); if(v) provSet.add(v); }
+    }
+  } else if (vonrData) {
+    const provCol = document.getElementById('mVonr_prov')?.value || 'province';
+    for (const r of vonrData.rows) { const v=(r[provCol]||'').trim(); if(v) provSet.add(v); }
+  }
+  const provs = [...provSet].sort();
+  document.getElementById('provSelector').innerHTML = provs.map(p=>`<div class="prov-chip" onclick="toggleProv(this)" data-prov="${escA(p)}">${escH(p)}</div>`).join('');
+}
+
+function toggleProv(el) { el.classList.toggle('selected'); }
+function selectAllProv() { document.querySelectorAll('#provSelector .prov-chip').forEach(c=>c.classList.add('selected')); }
+function deselectAllProv() { document.querySelectorAll('#provSelector .prov-chip').forEach(c=>c.classList.remove('selected')); }
+
+// ========== Core Calculation ==========
+
+// Get CGI sets per category for VoLTE
+function getVolteCGISets(provinceFilter) {
+  // Returns: { category: Set<cgi> }
+  const result = {};
+  const cgiCol = document.getElementById('mVolte_cgi')?.value || 'cgi';
+  const provCol = document.getElementById('mVolte_prov')?.value || 'province';
+
+  if (volteFormat === 'multi-sheet') {
+    for (const [sn, sd] of Object.entries(volteData.sheets)) {
+      const cat = getVolteCategory(sn);
+      if (!cat) continue;
+      if (!result[cat]) result[cat] = new Set();
+      for (const r of sd.rows) {
+        if (provinceFilter && (r[provCol]||'').trim() !== provinceFilter) {
+          // If filter is array, check membership
+          if (Array.isArray(provinceFilter)) {
+            if (!provinceFilter.includes((r[provCol]||'').trim())) continue;
+          } else continue;
+        }
+        const cgi = (r[cgiCol]||'').trim();
+        if (cgi) result[cat].add(cgi);
+      }
+    }
+  } else {
+    // Single-sheet: use flag columns
+    for (const cat of VOLTE_ALL_CATS) {
+      const el = document.getElementById('mVolte_'+cat);
+      if (!el || !el.value) continue;
+      const flagCol = el.value;
+      result[cat] = new Set();
+      for (const r of volteData.rows) {
+        if (provinceFilter) {
+          const prov = (r[provCol]||'').trim();
+          if (Array.isArray(provinceFilter) ? !provinceFilter.includes(prov) : prov !== provinceFilter) continue;
+        }
+        const v = String(r[flagCol]||'').trim();
+        // Flag column: "1" or "是" means active (handle both string and number)
+        const numVal = Number(r[flagCol]);
+        if (v === '1' || v === '是' || v === 'YES' || v === 'yes' || v === 'true' || numVal === 1) {
+          const cgi = (r[cgiCol]||'').trim();
+          if (cgi) result[cat].add(cgi);
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// Get CGI sets per category for VoNR
+function getVonrCGISets(provinceFilter) {
+  const result = {};
+  const cgiCol = document.getElementById('mVonr_cgi')?.value || 'cgi';
+  const provCol = document.getElementById('mVonr_prov')?.value || 'province';
+
+  if (vonrFormat === 'multi-sheet') {
+    for (const [sn, sd] of Object.entries(vonrData.sheets)) {
+      const cat = getVonrCategory(sn);
+      if (!cat) continue;
+      if (!result[cat]) result[cat] = new Set();
+      for (const r of sd.rows) {
+        if (provinceFilter) {
+          const prov = (r[provCol]||'').trim();
+          if (Array.isArray(provinceFilter) ? !provinceFilter.includes(prov) : prov !== provinceFilter) continue;
+        }
+        const cgi = (r[cgiCol]||'').trim();
+        if (cgi) result[cat].add(cgi);
+      }
+    }
+  } else {
+    for (const cat of VONR_ALL_CATS) {
+      const el = document.getElementById('mVonr_'+cat);
+      if (!el || !el.value) continue;
+      const flagCol = el.value;
+      result[cat] = new Set();
+      for (const r of vonrData.rows) {
+        if (provinceFilter) {
+          const prov = (r[provCol]||'').trim();
+          if (Array.isArray(provinceFilter) ? !provinceFilter.includes(prov) : prov !== provinceFilter) continue;
+        }
+        const v = String(r[flagCol]||'').trim();
+        if (v === '1' || v === '是' || v === 'YES' || v === 'yes' || v === 'true') {
+          const cgi = (r[cgiCol]||'').trim();
+          if (cgi) result[cat].add(cgi);
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// Calculate counts from CGI sets
+function calcFromCGISets(cgiSets, div30Cats, countCats) {
+  const result = {};
+  let total = 0;
+  for (const cat of [...div30Cats, ...countCats]) {
+    const cgiSet = cgiSets[cat] || new Set();
+    if (div30Cats.includes(cat)) {
+      result[cat] = Math.floor(cgiSet.size / 30);
+    } else {
+      result[cat] = cgiSet.size;
+    }
+    total += result[cat];
+  }
+  result['_total'] = total;
+  return result;
+}
+
+// Build CGI -> {city, district, vendor} lookup for 4G and 5G separately
+function build4GLookup(cgiSet) {
+  const lookup = {};
+  if (!gongcan4G.length) return lookup;
+  const cgiCol = document.getElementById('mGC4G_cgi')?.value;
+  const cityCol = document.getElementById('mGC4G_city')?.value;
+  const distCol = document.getElementById('mGC4G_district')?.value;
+  const vendorCol = document.getElementById('mGC4G_vendor')?.value;
+  if (!cgiCol) return lookup;
+
+  const remaining = cgiSet ? new Set(cgiSet) : null;
+  for (const d of gongcan4G) {
+    if (remaining && remaining.size === 0) break;
+    for (const row of d.rows) {
+      if (remaining && remaining.size === 0) break;
+      const cgi = (row[cgiCol]||'').trim();
+      if (!cgi) continue;
+      if (remaining && !remaining.has(cgi)) continue;
+      if (!lookup[cgi]) {
+        lookup[cgi] = {
+          city: cityCol ? ((row[cityCol]||'').trim()||'未知') : '未知',
+          district: distCol ? ((row[distCol]||'').trim()||'未知') : '未知',
+          vendor: vendorCol ? ((row[vendorCol]||'').trim()||'未知') : '未知',
+        };
+        if (remaining) remaining.delete(cgi);
+      }
+    }
+  }
+  if (remaining) {
+    for (const cgi of remaining) lookup[cgi] = {city:'未知', district:'未知', vendor:'未知'};
+  }
+  return lookup;
+}
+
+function build5GLookup(cgiSet) {
+  const lookup = {};
+  if (!gongcan5G.length) return lookup;
+  const cgiCol = document.getElementById('mGC5G_cgi')?.value;
+  const cityCol = document.getElementById('mGC5G_city')?.value;
+  const distCol = document.getElementById('mGC5G_district')?.value;
+  const vendorCol = document.getElementById('mGC5G_vendor')?.value;
+  if (!cgiCol) return lookup;
+
+  const remaining = cgiSet ? new Set(cgiSet) : null;
+  for (const d of gongcan5G) {
+    if (remaining && remaining.size === 0) break;
+    for (const row of d.rows) {
+      if (remaining && remaining.size === 0) break;
+      const cgi = (row[cgiCol]||'').trim();
+      if (!cgi) continue;
+      if (remaining && !remaining.has(cgi)) continue;
+      if (!lookup[cgi]) {
+        lookup[cgi] = {
+          city: cityCol ? ((row[cityCol]||'').trim()||'未知') : '未知',
+          district: distCol ? ((row[distCol]||'').trim()||'未知') : '未知',
+          vendor: vendorCol ? ((row[vendorCol]||'').trim()||'未知') : '未知',
+        };
+        if (remaining) remaining.delete(cgi);
+      }
+    }
+  }
+  if (remaining) {
+    for (const cgi of remaining) lookup[cgi] = {city:'未知', district:'未知', vendor:'未知'};
+  }
+  return lookup;
+}
+
+// ========== Start Calculation ==========
+function startCalculation() {
+  if (!currentMode) return;
+  showLoading('正在计算...');
+  setTimeout(() => {
+    try {
+      if (currentMode === 'national') calcNational();
+      else calcProvince();
+      hideLoading();
+    } catch(e) {
+      hideLoading();
+      alert('计算出错: ' + e.message);
+    }
+  }, 100);
+}
+
+// ========== MODE A: National ==========
+function calcNational() {
+  const voLTEResult = [];
+  const voNRResult = [];
+
+  // Get all provinces
+  const provSet = new Set();
+  const vProvCol = document.getElementById('mVolte_prov')?.value || 'province';
+  const nProvCol = document.getElementById('mVonr_prov')?.value || 'province';
+
+  if (volteFormat === 'multi-sheet') {
+    for (const sd of Object.values(volteData.sheets))
+      for (const r of sd.rows) { const v=(r[vProvCol]||'').trim(); if(v) provSet.add(v); }
+  } else if (volteData) {
+    for (const r of volteData.rows) { const v=(r[vProvCol]||'').trim(); if(v) provSet.add(v); }
+  }
+  if (vonrFormat === 'multi-sheet') {
+    for (const sd of Object.values(vonrData.sheets))
+      for (const r of sd.rows) { const v=(r[nProvCol]||'').trim(); if(v) provSet.add(v); }
+  } else if (vonrData) {
+    for (const r of vonrData.rows) { const v=(r[nProvCol]||'').trim(); if(v) provSet.add(v); }
+  }
+
+  // Per province
+  for (const prov of [...provSet].sort()) {
+    // VoLTE
+    const volteSets = getVolteCGISets(prov);
+    const volteCounts = calcFromCGISets(volteSets, VOLTE_DIV30_CATS, VOLTE_COUNT_CATS);
+    voLTEResult.push({ province: prov, ...volteCounts });
+
+    // VoNR
+    const vonrSets = getVonrCGISets(prov);
+    const vonrCounts = calcFromCGISets(vonrSets, VONR_DIV30_CATS, VONR_COUNT_CATS);
+    voNRResult.push({ province: prov, ...vonrCounts });
+  }
+
+  calcResult = { mode:'national', data: { voLTE: voLTEResult, voNR: voNRResult } };
+  showResult();
+}
+
+// ========== MODE B: Province ==========
+function calcProvince() {
+  const selectedProvs = [...document.querySelectorAll('#provSelector .prov-chip.selected')].map(el=>el.dataset.prov);
+  if (!selectedProvs.length) { hideLoading(); alert('请至少选择一个省份'); return; }
+
+  // Collect all CGIs for optimized lookup
+  const allCGIs = new Set();
+  const vCgiCol = document.getElementById('mVolte_cgi')?.value || 'cgi';
+  const nCgiCol = document.getElementById('mVonr_cgi')?.value || 'cgi';
+  const vProvCol = document.getElementById('mVolte_prov')?.value || 'province';
+  const nProvCol = document.getElementById('mVonr_prov')?.value || 'province';
+
+  if (volteFormat === 'multi-sheet') {
+    for (const sd of Object.values(volteData.sheets))
+      for (const r of sd.rows) { if(selectedProvs.includes((r[vProvCol]||'').trim())){const c=(r[vCgiCol]||'').trim();if(c)allCGIs.add(c);} }
+  } else if (volteData) {
+    for (const r of volteData.rows) { if(selectedProvs.includes((r[vProvCol]||'').trim())){const c=(r[vCgiCol]||'').trim();if(c)allCGIs.add(c);} }
+  }
+  if (vonrFormat === 'multi-sheet') {
+    for (const sd of Object.values(vonrData.sheets))
+      for (const r of sd.rows) { if(selectedProvs.includes((r[nProvCol]||'').trim())){const c=(r[nCgiCol]||'').trim();if(c)allCGIs.add(c);} }
+  } else if (vonrData) {
+    for (const r of vonrData.rows) { if(selectedProvs.includes((r[nProvCol]||'').trim())){const c=(r[nCgiCol]||'').trim();if(c)allCGIs.add(c);} }
+  }
+
+  const cgi4GLookup = build4GLookup(allCGIs);
+  const cgi5GLookup = build5GLookup(allCGIs);
+  const result = { voLTE: {city:[],district:[],vendor:[]}, voNR: {city:[],district:[],vendor:[]} };
+
+  function calcByDimension(volteSets, vonrSets, dimKey, isVolte) {
+    const voLTEGroups = {};
+    const voNRGroups = {};
+
+    for (const cat of (isVolte ? VOLTE_ALL_CATS : VONR_ALL_CATS)) {
+      const cgiSet = isVolte ? (volteSets[cat]||new Set()) : (vonrSets[cat]||new Set());
+      const lookup = isVolte ? cgi4GLookup : cgi5GLookup;
+      for (const cgi of cgiSet) {
+        const gc = lookup[cgi] || {city:'未知',district:'未知',vendor:'未知'};
+        const dimVal = gc[dimKey] || '未知';
+        if (isVolte) {
+          if (!voLTEGroups[dimVal]) voLTEGroups[dimVal] = {};
+          if (!voLTEGroups[dimVal][cat]) voLTEGroups[dimVal][cat] = new Set();
+          voLTEGroups[dimVal][cat].add(cgi);
+        } else {
+          if (!voNRGroups[dimVal]) voNRGroups[dimVal] = {};
+          if (!voNRGroups[dimVal][cat]) voNRGroups[dimVal][cat] = new Set();
+          voNRGroups[dimVal][cat].add(cgi);
+        }
+      }
+    }
+
+    return { voLTEGroups, voNRGroups };
+  }
+
+  const volteSets = getVolteCGISets(selectedProvs);
+  const vonrSets = getVonrCGISets(selectedProvs);
+
+  const dims = [];
+  if (document.getElementById('dimCity').checked) dims.push({key:'city',label:'地市'});
+  if (document.getElementById('dimDistrict').checked) dims.push({key:'district',label:'区县'});
+  if (document.getElementById('dimVendor').checked) dims.push({key:'vendor',label:'厂家'});
+
+  for (const dim of dims) {
+    // VoLTE用4G工参
+    const { voLTEGroups } = calcByDimension(volteSets, {}, dim.key, true);
+    // VoNR用5G工参
+    const { voNRGroups } = calcByDimension({}, vonrSets, dim.key, false);
+
+    for (const [dimVal, catSets] of Object.entries(voLTEGroups)) {
+      const counts = calcFromCGISets(catSets, VOLTE_DIV30_CATS, VOLTE_COUNT_CATS);
+      result.voLTE[dim.key].push({ dimension: dimVal, ...counts });
+    }
+    for (const [dimVal, catSets] of Object.entries(voNRGroups)) {
+      const counts = calcFromCGISets(catSets, VONR_DIV30_CATS, VONR_COUNT_CATS);
+      result.voNR[dim.key].push({ dimension: dimVal, ...counts });
+    }
+
+    // Sort by total descending
+    result.voLTE[dim.key].sort((a,b) => b._total - a._total);
+    result.voNR[dim.key].sort((a,b) => b._total - a._total);
+  }
+
+  calcResult = { mode:'province', data: result, selectedProvs };
+  showResult();
+}
+
+// ========== Show Result ==========
+function showResult() {
+  goStep(4);
+  const wrap = document.getElementById('resultContent');
+  wrap.innerHTML = '';
+
+  if (calcResult.mode === 'national') {
+    document.getElementById('resultModeLabel').textContent = '全国及各省计算';
+    wrap.innerHTML = renderNationalResult(calcResult.data);
+  } else {
+    document.getElementById('resultModeLabel').textContent = '指定省份 · ' + calcResult.selectedProvs.join(', ');
+    wrap.innerHTML = renderProvinceResult(calcResult.data);
+  }
+}
+
+function renderNationalResult(data) {
+  let html = '';
+
+  // VoLTE
+  if (data.voLTE.length) {
+    html += `<div style="font-size:15px;font-weight:600;color:rgba(102,126,234,.9);margin:14px 0 8px">📊 VoLTE 两低两高质差小区数量（按省）</div>`;
+    const hd = ['省份', ...VOLTE_ALL_CATS.map(c=>c+'(÷30)'), ...VOLTE_COUNT_CATS.map(c=>c), '合计'];
+    // Actually show correct headers
+    const headers = ['省份'];
+    for (const c of VOLTE_DIV30_CATS) headers.push(c+' (÷30)');
+    for (const c of VOLTE_COUNT_CATS) headers.push(c);
+    headers.push('合计');
+    html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+    for (const r of data.voLTE) {
+      html += `<tr><td style="text-align:left">${escH(r.province)}</td>`;
+      for (const c of VOLTE_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+      for (const c of VOLTE_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+      html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+
+  // VoNR
+  if (data.voNR.length) {
+    html += `<div style="font-size:15px;font-weight:600;color:rgba(102,126,234,.9);margin:18px 0 8px">📶 VoNR 两低两高质差小区数量（按省）</div>`;
+    const headers = ['省份'];
+    for (const c of VONR_DIV30_CATS) headers.push(c+' (÷30)');
+    for (const c of VONR_COUNT_CATS) headers.push(c);
+    headers.push('合计');
+    html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+    for (const r of data.voNR) {
+      html += `<tr><td style="text-align:left">${escH(r.province)}</td>`;
+      for (const c of VONR_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+      for (const c of VONR_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+      html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+
+  return html;
+}
+
+function renderProvinceResult(data) {
+  let html = '';
+  const dimLabels = {city:'地市', district:'区县', vendor:'厂家'};
+
+  for (const [dim, label] of Object.entries(dimLabels)) {
+    if (data.voLTE[dim]?.length) {
+      html += `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.7);margin:12px 0 6px">📊 VoLTE · 按${label}</div>`;
+      const headers = [label];
+      for (const c of VOLTE_DIV30_CATS) headers.push(c+' (÷30)');
+      for (const c of VOLTE_COUNT_CATS) headers.push(c);
+      headers.push('合计');
+      html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+      for (const r of data.voLTE[dim]) {
+        html += `<tr><td style="text-align:left">${escH(r.dimension)}</td>`;
+        for (const c of VOLTE_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+        for (const c of VOLTE_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+        html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+
+    if (data.voNR[dim]?.length) {
+      html += `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.7);margin:12px 0 6px">📶 VoNR · 按${label}</div>`;
+      const headers = [label];
+      for (const c of VONR_DIV30_CATS) headers.push(c+' (÷30)');
+      for (const c of VONR_COUNT_CATS) headers.push(c);
+      headers.push('合计');
+      html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+      for (const r of data.voNR[dim]) {
+        html += `<tr><td style="text-align:left">${escH(r.dimension)}</td>`;
+        for (const c of VONR_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+        for (const c of VONR_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
+        html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+  }
+
+  return html;
+}
+
+// ========== Export ==========
+function getResultRows() {
+  if (!calcResult) return [];
+  const rows = [];
+  if (calcResult.mode === 'national') {
+    const d = calcResult.data;
+    if (d.voLTE.length) {
+      rows.push(['[VoLTE 两低两高质差小区数量（按省）]']);
+      const h = ['省份'];
+      for (const c of VOLTE_DIV30_CATS) h.push(c+'(÷30)');
+      for (const c of VOLTE_COUNT_CATS) h.push(c);
+      h.push('合计');
+      rows.push(h);
+      for (const r of d.voLTE) {
+        const row = [r.province];
+        for (const c of [...VOLTE_DIV30_CATS, ...VOLTE_COUNT_CATS]) row.push(r[c]||0);
+        row.push(r._total||0);
+        rows.push(row);
+      }
+      rows.push([]);
+    }
+    if (d.voNR.length) {
+      rows.push(['[VoNR 两低两高质差小区数量（按省）]']);
+      const h = ['省份'];
+      for (const c of VONR_DIV30_CATS) h.push(c+'(÷30)');
+      for (const c of VONR_COUNT_CATS) h.push(c);
+      h.push('合计');
+      rows.push(h);
+      for (const r of d.voNR) {
+        const row = [r.province];
+        for (const c of [...VONR_DIV30_CATS, ...VONR_COUNT_CATS]) row.push(r[c]||0);
+        row.push(r._total||0);
+        rows.push(row);
+      }
+    }
+  } else {
+    const d = calcResult.data;
+    const dimLabels = {city:'地市', district:'区县', vendor:'厂家'};
+    for (const [dim, label] of Object.entries(dimLabels)) {
+      if (d.voLTE[dim]?.length) {
+        rows.push([`[VoLTE 按${label}]`]);
+        const h = [label];
+        for (const c of [...VOLTE_DIV30_CATS, ...VOLTE_COUNT_CATS]) h.push(c);
+        h.push('合计');
+        rows.push(h);
+        for (const r of d.voLTE[dim]) {
+          const row = [r.dimension];
+          for (const c of [...VOLTE_DIV30_CATS, ...VOLTE_COUNT_CATS]) row.push(r[c]||0);
+          row.push(r._total||0);
+          rows.push(row);
+        }
+        rows.push([]);
+      }
+      if (d.voNR[dim]?.length) {
+        rows.push([`[VoNR 按${label}]`]);
+        const h = [label];
+        for (const c of [...VONR_DIV30_CATS, ...VONR_COUNT_CATS]) h.push(c);
+        h.push('合计');
+        rows.push(h);
+        for (const r of d.voNR[dim]) {
+          const row = [r.dimension];
+          for (const c of [...VONR_DIV30_CATS, ...VONR_COUNT_CATS]) row.push(r[c]||0);
+          row.push(r._total||0);
+          rows.push(row);
+        }
+        rows.push([]);
+      }
+    }
+  }
+  return rows;
+}
+
+function exportResult() {
+  const rows = getResultRows();
+  if (!rows.length) { alert('无数据'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:18},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '计算结果');
+  XLSX.writeFile(wb, '集团4-5G两低两高质差小区数量计算_结果.xlsx');
+}
+
+function exportResultCSV() {
+  const rows = getResultRows();
+  if (!rows.length) { alert('无数据'); return; }
+  let csv = '\uFEFF' + rows.map(r=>r.map(c=>{
+    const s=String(c??''); return s.includes(',')?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='集团4-5G两低两高质差小区数量计算_结果.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ========== Utils ==========
+function escH(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function escA(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function showLoading(txt){document.getElementById('loadingText').textContent=txt||'处理中...';document.getElementById('loadingMask').classList.add('show')}
+function hideLoading(){document.getElementById('loadingMask').classList.remove('show')}
+
+// ========== Drag & Drop ==========
+['upVoLTE','upVoNR','upGongcan'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});
+  el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
+  el.addEventListener('drop',e=>{
+    e.preventDefault(); el.classList.remove('drag-over');
+    const files=e.dataTransfer.files;
+    if(id==='upVoLTE'&&files[0]) { const inp=document.getElementById('fileVoLTE'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleVolteFile(inp); }
+    if(id==='upVoNR'&&files[0]) { const inp=document.getElementById('fileVoNR'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleVonrFile(inp); }
+    if(id==='upGongcan'&&files.length) { const inp=document.getElementById('fileGongcan'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleGongcanFiles(inp); }
+  });
+});
+</script>
+</body>
+</html>
