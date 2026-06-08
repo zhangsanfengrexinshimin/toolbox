@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G两网高低质差小区占比计算 - 热心市民张三丰的工具箱</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23667eea'/%3E%3Cstop offset='100%25' stop-color='%23764ba2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Crect x='12' y='16' width='40' height='32' rx='4' fill='none' stroke='white' stroke-width='2.5' opacity='0.9'/%3E%3Cline x1='12' y1='24' x2='52' y2='24' stroke='white' stroke-width='2.5' opacity='0.7'/%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ff6b6b'/%3E%3Ccircle cx='27' cy='20' r='2' fill='%23ffd93d'/%3E%3Ccircle cx='34' cy='20' r='2' fill='%236bcb77'/%3E%3Crect x='18' y='29' width='10' height='8' rx='2' fill='white' opacity='0.85'/%3E%3Crect x='31' y='29' width='15' height='8' rx='2' fill='white' opacity='0.6'/%3E%3Crect x='18' y='40' width='28' height='5' rx='2' fill='white' opacity='0.4'/%3E%3C/svg%3E">
+    <script src="xlsx.full.min.js"></script>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f0f1a;
+    min-height: 100vh;
+    color: rgba(255,255,255,0.9);
+}
+.header {
+    background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.15));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 20px 0;
+}
+.header-content {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.logo-section { display: flex; align-items: center; gap: 12px; }
+.logo { font-size: 32px; text-decoration: none; }
+.logo-text { color: rgba(255,255,255,0.9); font-size: 18px; font-weight: 600; }
+.logo-text span { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 400; }
+.back-link {
+    color: rgba(102,126,234,0.8); text-decoration: none; font-size: 14px;
+    display: flex; align-items: center; gap: 6px; transition: color 0.3s;
+}
+.back-link:hover { color: rgba(102,126,234,1); }
+
+.container { max-width: 1500px; margin: 0 auto; padding: 30px 20px; }
+
+.page-title {
+    font-size: 26px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #a78bfa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.page-desc { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 25px; line-height: 1.6; }
+
+/* Upload */
+.upload-area {
+    border: 2px dashed rgba(102,126,234,0.4); border-radius: 16px; padding: 36px;
+    text-align: center; background: rgba(255,255,255,0.03); transition: all 0.3s;
+    cursor: pointer; margin-bottom: 20px;
+}
+.upload-area:hover { border-color: rgba(102,126,234,0.8); background: rgba(255,255,255,0.06); }
+.upload-area.drag-over { border-color: #667eea; background: rgba(102,126,234,0.1); transform: scale(1.01); }
+.upload-icon { font-size: 44px; margin-bottom: 10px; }
+.upload-text { font-size: 15px; color: rgba(102,126,234,0.8); margin-bottom: 8px; }
+.upload-hint { color: rgba(255,255,255,0.35); font-size: 13px; }
+.file-input { display: none; }
+
+/* Buttons */
+.btn { padding: 10px 20px; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
+.btn-primary { background: rgba(102,126,234,0.2); color: rgba(102,126,234,1); border: 1px solid rgba(102,126,234,0.4); }
+.btn-primary:hover { background: rgba(102,126,234,0.3); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+.btn-secondary { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+.btn-success { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.4); }
+.btn-success:hover { background: rgba(76,175,80,0.3); }
+.btn-danger { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid rgba(244,67,54,0.4); }
+.btn-danger:hover { background: rgba(244,67,54,0.3); }
+.btn-warning { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid rgba(255,152,0,0.4); }
+.btn-warning:hover { background: rgba(255,152,0,0.3); }
+.btn-small { padding: 7px 14px; font-size: 13px; }
+.btn-tiny { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+
+/* Alerts */
+.alert { padding: 12px 18px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; }
+.alert-info { background: rgba(25,118,210,0.1); color: #64b5f6; border: 1px solid rgba(25,118,210,0.3); }
+.alert-success { background: rgba(76,175,80,0.1); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+.alert-error { background: rgba(244,67,54,0.1); color: #e57373; border: 1px solid rgba(244,67,54,0.3); }
+.alert-warning { background: rgba(255,152,0,0.1); color: #ffb74d; border: 1px solid rgba(255,152,0,0.3); }
+
+/* Cards */
+.card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 22px; margin-bottom: 18px; transition: all 0.3s;
+}
+.card:hover { border-color: rgba(102,126,234,0.3); }
+.card-title {
+    font-size: 17px; font-weight: 600; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.card-title .icon { font-size: 20px; }
+.card-title .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: auto;
+    background: rgba(102,126,234,0.2); color: rgba(167,139,250,0.9);
+}
+
+/* Form elements */
+.form-group { margin-bottom: 14px; }
+.form-group label {
+    display: block; font-size: 13px; color: rgba(255,255,255,0.65);
+    margin-bottom: 6px; font-weight: 500;
+}
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.form-row .form-group { flex: 1; min-width: 200px; }
+select, input[type="text"], input[type="number"] {
+    width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.9); font-size: 14px;
+    outline: none; transition: all 0.3s; appearance: auto;
+}
+select:focus, input:focus { border-color: rgba(102,126,234,0.6); background: rgba(255,255,255,0.08); }
+select option { background: #1a1a2e; color: #fff; }
+input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* Table */
+.table-wrap { overflow-x: auto; border-radius: 10px; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+    background: rgba(102,126,234,0.15); color: rgba(167,139,250,0.95);
+    padding: 10px 14px; text-align: left; font-weight: 600; white-space: nowrap;
+    border-bottom: 2px solid rgba(102,126,234,0.3); position: sticky; top: 0;
+}
+tbody td {
+    padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.75);
+}
+tbody tr:hover { background: rgba(102,126,234,0.06); }
+tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.num-cell { font-family: "SF Mono", Consolas, monospace; color: rgba(130,204,255,0.9) !important; }
+.highlight-cell { color: #ff9800 !important; font-weight: 600; }
+.ratio-cell { color: #81c784 !important; font-weight: 600; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn {
+    padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 500; background: transparent;
+    color: rgba(255,255,255,0.5); transition: all 0.3s;
+    border: 1px solid transparent;
+}
+.tab-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.04); }
+.tab-btn.active {
+    background: rgba(102,126,234,0.15); color: rgba(167,139,250,1);
+    border-color: rgba(102,126,234,0.3);
+}
+
+/* Section */
+.section { display: none; }
+.section.active { display: block; }
+
+/* File list */
+.file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.file-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: rgba(255,255,255,0.03); border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06); font-size: 13px;
+}
+.file-item .file-name { color: rgba(255,255,255,0.85); font-weight: 500; }
+.file-item .file-info { color: rgba(255,255,255,0.4); font-size: 12px; }
+.file-item .file-actions { display: flex; gap: 6px; }
+
+/* Config grid */
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.config-item {
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px; padding: 14px;
+}
+.config-item h4 { font-size: 13px; color: rgba(167,139,250,0.85); margin-bottom: 8px; }
+.config-item p { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+/* Result summary */
+.result-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 18px;
+}
+.summary-card {
+    background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.08));
+    border: 1px solid rgba(102,126,234,0.2); border-radius: 12px; padding: 16px; text-align: center;
+}
+.summary-card .label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+.summary-card .value { font-size: 24px; font-weight: 700; color: rgba(167,139,250,1); }
+.summary-card .sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+
+/* Encoding panel */
+.encoding-panel {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 999; align-items: center; justify-content: center;
+}
+.encoding-panel.show { display: flex; }
+.encoding-dialog {
+    background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 28px; max-width: 480px; width: 90%;
+}
+.encoding-dialog h3 { font-size: 18px; margin-bottom: 16px; color: rgba(255,255,255,0.9); }
+
+/* Guide button */
+.guide-btn {
+    position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px;
+    border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; font-size: 24px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.4); z-index: 998;
+    display: flex; align-items: center; justify-content: center; transition: all 0.3s;
+}
+.guide-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(102,126,234,0.5); }
+
+.guide-modal {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.65); z-index: 1000; align-items: center; justify-content: center;
+}
+.guide-modal.show { display: flex; }
+.guide-content {
+    background: #1a1a2e; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px; padding: 32px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;
+}
+.guide-content h2 { font-size: 22px; margin-bottom: 18px; color: rgba(167,139,250,1); }
+.guide-content h3 { font-size: 16px; margin: 18px 0 10px; color: rgba(102,126,234,1); }
+.guide-content p, .guide-content li { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.7); }
+.guide-content ul { padding-left: 20px; }
+.guide-content code {
+    background: rgba(102,126,234,0.15); padding: 2px 8px; border-radius: 4px;
+    font-size: 13px; color: rgba(130,204,255,0.9);
+}
+
+/* Tag */
+.tag {
+    display: inline-block; padding: 2px 10px; border-radius: 8px; font-size: 12px;
+    background: rgba(102,126,234,0.15); color: rgba(167,139,250,0.85); margin: 2px;
+}
+.tag-green { background: rgba(76,175,80,0.15); color: #81c784; }
+.tag-orange { background: rgba(255,152,0,0.15); color: #ffb74d; }
+.tag-red { background: rgba(244,67,54,0.15); color: #e57373; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container { padding: 16px 12px; }
+    .page-title { font-size: 22px; }
+    .form-row { flex-direction: column; }
+    .config-grid { grid-template-columns: 1fr; }
+    .result-summary { grid-template-columns: repeat(2, 1fr); }
+}
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-content">
+        <div class="logo-section">
+            <span class="logo">📊</span>
+            <div class="logo-text">5G两网高低质差小区占比计算<span>全国/G2省 · VoLTE/VoNR</span></div>
+        </div>
+        <a href="index.html" target="_blank" class="back-link">🏠 工具箱首页 ↗</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1 class="page-title">📡 全国5G两网高低质差小区占比计算</h1>
+    <p class="page-desc">
+        上传「全国5G两网高低质差小区占比计算」中的VoLTE两网低质高差小区数量表和VoNR两网低质高差小区数量表，
+        自动计算全国指标、G2省分地市/分区县/分厂家的小区数量与占比。同时支持提取原始明细数据。
+    </p>
+
+    <!-- Step 1: 文件上传 -->
+    <div class="card" id="uploadCard">
+        <div class="card-title"><span class="icon">📁</span> 第一步：上传数据文件</div>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📂</div>
+            <div class="upload-text">点击或拖拽上传 Excel / CSV / TXT 文件</div>
+            <div class="upload-hint">支持 .xlsx .xls .csv .txt，可多选（自动合并同表头）</div>
+        </div>
+        <input type="file" id="fileInput" class="file-input" multiple accept=".xlsx,.xls,.csv,.txt">
+        <div class="file-list" id="fileList"></div>
+        
+        <!-- 编码设置面板 -->
+        <div class="encoding-panel" id="encodingPanel">
+            <div class="encoding-dialog">
+                <h3>⚙️ 编码设置 - <span id="encFileName"></span></h3>
+                <div class="form-group">
+                    <label>文件编码</label>
+                    <select id="encSelect"><option value="UTF-8">UTF-8</option><option value="GBK">GBK</option><option value="GB2312">GB2312</option><option value="UTF-16LE">UTF-16LE</option><option value="ISO-8859-1">ISO-8859-1</option></select>
+                </div>
+                <div class="form-group">
+                    <label>分隔符 (CSV/TXT)</label>
+                    <select id="delimSelect"><option value="auto">自动检测</option><option value=",">逗号 (,)</option><option value="\t">制表符 (\t)</option><option value=";">分号 (;)</option></select>
+                </div>
+                <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+                    检测到的编码：<strong id="detectedEnc" style="color:#64b5f6">-</strong>
+                </p>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-primary" onclick="applyEncoding()">应用并重新解析</button>
+                    <button class="btn btn-secondary" onclick="closeEncodingPanel()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据预览 -->
+    <div class="card" id="previewCard" style="display:none">
+        <div class="card-title"><span class="icon">👁️</span> 数据预览 <span class="badge" id="previewBadge"></span></div>
+        <div class="table-wrap">
+            <table><thead id="previewHead"></thead><tbody id="previewBody"></tbody></table>
+        </div>
+    </div>
+
+    <!-- Tab 导航 -->
+    <div class="tabs" id="mainTabs" style="display:none">
+        <button class="tab-btn active" data-tab="tab-calc">🧮 指标计算</button>
+        <button class="tab-btn" data-tab="tab-volte-extract">📤 VoLTE数据提取</button>
+        <button class="tab-btn" data-tab="tab-vonr-extract">📤 VoNR数据提取</button>
+        <button class="tab-btn" data-tab="tab-config">⚙️ 列映射配置</button>
+    </div>
+
+    <!-- ===== Tab 1: 指标计算 ===== -->
+    <div class="section active" id="tab-calc">
+        <!-- 计算类型选择 -->
+        <div class="card">
+            <div class="card-title"><span class="icon">🎯</span> 选择计算维度</div>
+            <div class="config-grid">
+                <div class="config-item" onclick="setCalcType('national')">
+                    <h4>🌐 全国指标计算</h4>
+                    <p>计算全国范围的 VoLTE/VoNR 两网低质高差小区总数量及占比</p>
+                </div>
+                <div class="config-item" onclick="setCalcType('g2-city')">
+                    <h4>🗺️ G2省指标分地市计算</h4>
+                    <p>按地市分组统计各市的 VoLTE/VoNR 低质高差小区数量及占比</p>
+                </div>
+                <div class="config-item" onclick="setCalcType('g2-district')">
+                    <h4>🏘️ G2省指标分区县计算</h4>
+                    <p>按区县分组统计各区县的 VoLTE/VoNR 低质高差小区数量及占比</p>
+                </div>
+                <div class="config-item" onclick="setCalcType('g2-vendor')">
+                    <h4>🏭 G2省指标分厂家计算</h4>
+                    <p>按设备厂家分组统计各厂家的 VoLTE/VoNR 低质高差小区数量及占比</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 列配置 -->
+        <div class="card" id="calcConfigCard" style="display:none">
+            <div class="card-title"><span class="icon">🔧</span> 列配置 <span class="badge" id="calcTypeLabel"></span></div>
+            
+            <div id="nationalConfig">
+                <div class="alert alert-info" style="margin-bottom:14px">
+                    💡 <strong>全国指标计算：</strong>直接统计全部数据的 VoLTE/VoNR 低质高差小区数量。需指定数量列。
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>VOLTE低质高差小区数量列</label>
+                        <select id="nVolteCountCol"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>VONR低质高差小区数量列</label>
+                        <select id="nVonrCountCol"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="g2CityConfig" style="display:none">
+                <div class="alert alert-info" style="margin-bottom:14px">
+                    💡 <strong>G2省分地市计算：</strong>按「地市」列分组汇总。需从VoLTE表中提取"province"列为"G2"、且"provlevel"列为"02"的数据。
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>地市列</label><select id="g2cCityCol"></select></div>
+                    <div class="form-group"><label>省份列 (筛选G2)</label><select id="g2cProvCol"></select></div>
+                    <div class="form-group"><label>省份级别列 (筛选02)</label><select id="g2cLevelCol"></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>VOLTE低质高差小区数量列</label><select id="g2cVolteCol"></select></div>
+                    <div class="form-group"><label>VONR低质高差小区数量列</label><select id="g2cVonrCol"></select></div>
+                </div>
+            </div>
+
+            <div id="g2DistrictConfig" style="display:none">
+                <div class="alert alert-info" style="margin-bottom:14px">
+                    💡 <strong>G2省分区县计算：</strong>按「区县」列分组汇总。同样筛选G2省+级别02的数据。
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>区县列</label><select id="g2dDistCol"></select></div>
+                    <div class="form-group"><label>地市列 (可选)</label><select id="g2dCityCol"></select></div>
+                    <div class="form-group"><label>省份列 (筛选G2)</label><select id="g2dProvCol"></select></div>
+                    <div class="form-group"><label>省份级别列 (筛选02)</label><select id="g2dLevelCol"></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>VOLTE低质高差小区数量列</label><select id="g2dVolteCol"></select></div>
+                    <div class="form-group"><label>VONR低质高差小区数量列</label><select id="g2dVonrCol"></select></div>
+                </div>
+            </div>
+
+            <div id="g2VendorConfig" style="display:none">
+                <div class="alert alert-info" style="margin-bottom:14px">
+                    💡 <strong>G2省分厂家计算：</strong>按「厂家」列分组汇总。筛选G2省+级别02的数据。
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>厂家列</label><select id="g2vVendorCol"></select></div>
+                    <div class="form-group"><label>省份列 (筛选G2)</label><select id="g2vProvCol"></select></div>
+                    <div class="form-group"><label>省份级别列 (筛选02)</label><select id="g2vLevelCol"></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>VOLTE低质高差小区数量列</label><select id="g2vVolteCol"></select></div>
+                    <div class="form-group"><label>VONR低质高差小区数量列</label><select id="g2vVonrCol"></select></div>
+                </div>
+            </div>
+
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-success" onclick="runCalculation()">▶ 开始计算</button>
+                <button class="btn btn-secondary" onclick="exportResult()">📥 导出结果 Excel</button>
+                <button class="btn btn-secondary" onclick="exportResultCSV()">📥 导出结果 CSV</button>
+            </div>
+        </div>
+
+        <!-- 计算结果 -->
+        <div class="card" id="resultCard" style="display:none">
+            <div class="card-title"><span class="icon">📈</span> 计算结果 <span class="badge" id="resultBadge"></span></div>
+            <div class="result-summary" id="resultSummary"></div>
+            <div class="table-wrap">
+                <table><thead id="resultHead"></thead><tbody id="resultBody"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Tab 2: VoLTE数据提取 ===== -->
+    <div class="section" id="tab-volte-extract">
+        <div class="card">
+            <div class="card-title"><span class="icon">📞</span> VoLTE两网高低质差小区数据提取</div>
+            <div class="alert alert-info" style="margin-bottom:14px">
+                从原始数据中提取 VoLTE 相关的质差小区明细。选择要提取的指标列，系统将输出每个指标的<strong>小区数量</strong>（去重）以及对应的<strong>自然月</strong>信息。
+            </div>
+            <div class="config-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+                <div class="config-item">
+                    <h4>📉 低接通</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="volteLowConnCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 低SRVCC</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="volteLowSrvccCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 高掉话(1/2)</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="volteHighDropCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 上行质差包</h4>
+                    <p>计算 <code>cg1</code> 重叠数量</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="volteUpBadCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 下行质差包</h4>
+                    <p>计算 <code>cg1</code> 重叠数量</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="volteDownBadCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-success" onclick="extractVoLTE()">▶ 提取 VoLTE 数据</button>
+                <button class="btn btn-secondary" onclick="exportVoLTE()">📥 导出 VoLTE 结果</button>
+            </div>
+        </div>
+        <div class="card" id="volteResultCard" style="display:none">
+            <div class="card-title"><span class="icon">📋</span> VoLTE 提取结果</div>
+            <div class="table-wrap">
+                <table><thead id="volteHead"></thead><tbody id="volteBody"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Tab 3: VoNR数据提取 ===== -->
+    <div class="section" id="tab-vonr-extract">
+        <div class="card">
+            <div class="card-title"><span class="icon">📶</span> VoNR两网高低质差小区数据提取</div>
+            <div class="alert alert-info" style="margin-bottom:14px">
+                从原始数据中提取 VoNR 相关的质差小区明细。涵盖语音接通、掉话、切换、视频掉话、解调、丢包等多维指标。
+            </div>
+            <div class="config-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+                <div class="config-item">
+                    <h4>📉 VoNR接通</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrConnCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 VoNR语音掉话</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrVoiceDropCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 volte信令切换</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrSwitchCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 VoLTE视频掉话</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrVideoDropCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 VoNR解调话</h4>
+                    <p>计算 <code>cg1</code> 的数量 // 设定年月的自然天数</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrDemodCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+                <div class="config-item">
+                    <h4>📉 VoXR上下行高丢包</h4>
+                    <p>计算 <code>cg1</code> 重叠数量</p>
+                    <div class="form-group" style="margin-top:8px">
+                        <select id="vonrXrLossCol"><option value="">-- 选择列 --</option></select>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-success" onclick="extractVoNR()">▶ 提取 VoNR 数据</button>
+                <button class="btn btn-secondary" onclick="exportVoNR()">📥 导出 VoNR 结果</button>
+            </div>
+        </div>
+        <div class="card" id="vonrResultCard" style="display:none">
+            <div class="card-title"><span class="icon">📋</span> VoNR 提取结果</div>
+            <div class="table-wrap">
+                <table><thead id="vonrHead"></thead><tbody id="vonrBody"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Tab 4: 列映射配置 ===== -->
+    <div class="section" id="tab-config">
+        <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> 全局列映射参考</div>
+            <div class="alert alert-info" style="margin-bottom:14px">
+                当前已加载文件的列名如下。在各个功能Tab中选择的列将用于对应计算逻辑。<br>
+                如列名识别不准确，请在此确认实际列名后在各Tab中手动选择正确的列。
+            </div>
+            <div id="allColumnsDisplay" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="icon">📌</span> 指标计算方法说明</div>
+            <div style="font-size:13px;line-height:2;color:rgba(255,255,255,0.65)">
+                <p><strong class="tag">规则1</strong> 所有的数据统计中，小区数量均保留整数，且输出的频次应为<strong>体数量及小区指标</strong></p>
+                <p><strong class="tag">规则2</strong> 计算过程中，涉及到的指标：厂家、区县、信息月份等，对31道的所有工作文件，尽可能置次对应值，如遇找不到，最终标记为空即可</p>
+                <p><strong class="tag tag-green">VoLTE提取项</strong> 低接通 / 低SRVCC / 高掉话(1/2) → cg1的数量÷设定年月自然天数；上行/下行质差包 → cg1重叠数量</p>
+                <p><strong class="tag tag-orange">VoNR提取项</strong> 接通/语音掉话/信令切换/视频掉话/解调话 → cg1的数量÷设定年月自然天数；上下行高丢包 → cg1重叠数量</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 使用说明书按钮 -->
+<button class="guide-btn" onclick="toggleGuide()" title="使用说明书">📖</button>
+
+<!-- 使用说明书弹窗 -->
+<div class="guide-modal" id="guideModal" onclick="if(event.target===this)toggleGuide()">
+    <div class="guide-content">
+        <h2>📖 5G两网高低质差小区占比计算 — 使用说明书</h2>
+        <h3>📌 工具简介</h3>
+        <p>本工具用于处理「全国5G两网高低质差小区占比计算」相关数据，支持四大类指标计算和两类明细数据提取。</p>
+        
+        <h3>📂 支持的文件格式</h3>
+        <ul>
+            <li><strong>Excel</strong> (.xlsx, .xls) — 推荐，自动读取所有工作表</li>
+            <li><strong>CSV</strong> (.csv) — 支持逗号/制表符/分号分隔，自动检测编码</li>
+            <li><strong>TXT</strong> (.txt) — 同CSV，自动检测分隔符和编码</li>
+        </ul>
+
+        <h3>🔧 功能模块</h3>
+        <p><strong>① 指标计算（4种维度）</strong></p>
+        <ul>
+            <li><strong>全国指标计算</strong>：汇总全部数据的VoLTE/VoNR低质高差小区总数</li>
+            <li><strong>G2省分地市</strong>：按地市分组，筛选province=G2且provlevel=02</li>
+            <li><strong>G2省分区县</strong>：按区县分组，同上筛选条件</li>
+            <li><strong>G2省分厂家</strong>：按设备厂家分组，同上筛选条件</li>
+        </ul>
+
+        <p><strong>② VoLTE数据提取（5项）</strong></p>
+        <ul>
+            <li>低接通、低SRVCC、高掉话(1/2)、上行质差包、下行质差包</li>
+        </ul>
+
+        <p><strong>③ VoNR数据提取（6项）</strong></p>
+        <ul>
+            <li>VoNR接通、VoNR语音掉话、volte信令切换、VoLTE视频掉话、VoNR解调话、VoXR上下行高丢包</li>
+        </ul>
+
+        <h3>📋 使用步骤</h3>
+        <ol>
+            <li>上传包含VoLTE和VoNR数据的Excel/CSV/TXT文件</li>
+            <li>检查预览表格确认数据正确（如有乱码点文件名调整编码）</li>
+            <li>切换到「指标计算」Tab，选择计算维度并配置列名</li>
+            <li>点击「开始计算」查看结果，可导出Excel或CSV</li>
+            <li>切换到「VoLTE/VoNR数据提取」Tab，选择各指标对应列后提取</li>
+        </ol>
+
+        <h3>💡 注意事项</h3>
+        <ul>
+            <li>G2省计算会自动筛选 province列值为"G2" 且 provlevel列值为"02" 的行</li>
+            <li>占比 = 低质高差小区数量 ÷ 总小区数量 × 100%</li>
+            <li>所有计算结果保留整数（小区数量），占比保留2位小数</li>
+            <li>数据不离开您的浏览器，完全本地计算</li>
+        </ul>
+
+        <div style="text-align:right;margin-top:20px;">
+            <button class="btn btn-primary" onclick="toggleGuide()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 全局状态
+// ============================================================
+let uploadedFiles = [];       // [{name, data:[], headers:[], encoding, delimiter}]
+let currentCalcType = null;   // 'national' | 'g2-city' | 'g2-district' | 'g2-vendor'
+let calcResultData = null;    // 计算结果
+let volteExtractData = null;  // VoLTE提取结果
+let vonrExtractData = null;   // VoNR提取结果
+let currentFileForEncoding = null;
+
+// ============================================================
+// 编码检测
+// ============================================================
+function detectDelimiter(text) {
+    const firstLine = text.split('\n')[0] || '';
+    const counts = { ',': 0, ';': 0, '\t': 0, '|': 0 };
+    for (const ch of firstLine) { if (counts.hasOwnProperty(ch)) counts[ch]++; }
+    let maxDelim = ',', maxCount = 0;
+    for (const [d, c] of Object.entries(counts)) { if (c > maxCount) { maxCount = c; maxDelim = d; } }
+    return maxDelim === '\t' ? '\t' : maxDelim;
+}
+
+function detectEncoding(arrBuf) {
+    const u8 = new Uint8Array(arrBuf);
+    if (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) return 'UTF-8';
+    if (u8[0] === 0xFF && u8[1] === 0xFE) return 'UTF-16LE';
+    if (u8[0] === 0xFE && u8[1] === 0xFF) return 'UTF-16BE';
+    const t = new TextDecoder('utf-8').decode(u8);
+    if (!t.includes('\uFFFD')) return 'UTF-8';
+    try { const g = new TextDecoder('gbk').decode(u8); if (!g.includes('\uFFFD') && /[\u4e00-\u9fa5]/.test(g)) return 'GBK'; } catch(e){}
+    return 'UTF-8';
+}
+
+function showEncodingSettings(idx) {
+    currentFileForEncoding = idx;
+    const f = uploadedFiles[idx];
+    document.getElementById('encFileName').textContent = f.name;
+    document.getElementById('encSelect').value = f.encoding || 'UTF-8';
+    document.getElementById('delimSelect').value = f.delimiter || 'auto';
+    document.getElementById('detectedEnc').textContent = f.detectedEncoding || '-';
+    document.getElementById('encodingPanel').classList.add('show');
+}
+
+function closeEncodingPanel() { document.getElementById('encodingPanel').classList.remove('show'); }
+
+function applyEncoding() {
+    if (currentFileForEncoding === null) return;
+    const enc = document.getElementById('encSelect').value;
+    const delim = document.getElementById('delimSelect').value;
+    const f = uploadedFiles[currentFileForEncoding];
+    f.encoding = enc;
+    f.delimiter = delim;
+    closeEncodingPanel();
+    // 重新解析
+    reparseFile(currentFileForEncoding);
+}
+
+function reparseFile(idx) {
+    const f = uploadedFiles[idx];
+    if (!f._rawBuffer) return;
+    const dec = new TextDecoder(f.encoding === 'GBK' ? 'gbk' : f.encoding === 'GB2312' ? 'gbk' : 'utf-8');
+    let text = dec.decode(f._rawBuffer);
+    const actualDelim = f.delimiter === 'auto' ? detectDelimiter(text) : f.delimiter === '\\t' ? '\t' : f.delimiter;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length === 0) { alert('文件内容为空'); return; }
+    const headers = lines[0].split(actualDelim).map(h => h.trim().replace(/^["']|["']$/g, ''));
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(actualDelim).map(v => v.trim().replace(/^["']|["']$/g, ''));
+        if (vals.length >= headers.length) {
+            const row = {};
+            headers.forEach((h, j) => row[h] = vals[j]);
+            data.push(row);
+        }
+    }
+    f.headers = headers;
+    f.data = data;
+    refreshFileList();
+    showPreview();
+    populateAllColumns();
+}
+
+// ============================================================
+// 文件上传
+// ============================================================
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+async function handleFiles(files) {
+    for (const file of files) {
+        try {
+            if (file.name.match(/\.xlsx?$/i)) {
+                await readExcel(file);
+            } else {
+                await readTextFile(file);
+            }
+        } catch(err) {
+            alert(`读取 ${file.name} 失败: ${err.message}`);
+        }
+    }
+    refreshFileList();
+    showPreview();
+    populateAllColumns();
+    populateExtractColumns();
+}
+
+async function readTextFile(file) {
+    const buf = await file.arrayBuffer();
+    const detected = detectEncoding(buf);
+    const enc = detected;
+    const delim = 'auto';
+    const dec = new TextDecoder(enc === 'GBK' ? 'gbk' : enc === 'GB2312' ? 'gbk' : 'utf-8');
+    let text = dec.decode(buf);
+    const actualDelim = detectDelimiter(text);
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length === 0) throw new Error('文件内容为空');
+    const headers = lines[0].split(actualDelim).map(h => h.trim().replace(/^["']|["']$/g, ''));
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(actualDelim).map(v => v.trim().replace(/^["']|["']$/g, ''));
+        if (vals.length >= headers.length) {
+            const row = {};
+            headers.forEach((h, j) => row[h] = vals[j]);
+            data.push(row);
+        }
+    }
+    uploadedFiles.push({
+        name: file.name, headers, data, encoding: enc, delimiter: delim,
+        detectedEncoding: detected, _rawBuffer: buf
+    });
+}
+
+async function readExcel(file) {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const allData = [];
+    let headers = [];
+    for (const sn of wb.SheetNames) {
+        const ws = wb.Sheets[sn];
+        const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        if (json.length === 0) continue;
+        if (headers.length === 0 && json.length > 0) {
+            headers = json[0].map(h => String(h).trim());
+        }
+        for (let i = 1; i < json.length; i++) {
+            const row = {};
+            headers.forEach((h, j) => row[h] = String(json[i][j] ?? '').trim());
+            // 跳过全空行
+            if (headers.some(h => row[h] !== '')) allData.push(row);
+        }
+    }
+    uploadedFiles.push({
+        name: file.name, headers, data: allData, encoding: 'UTF-8', delimiter: '',
+        detectedEncoding: 'UTF-8 (Excel)', _rawBuffer: buf
+    });
+}
+
+function refreshFileList() {
+    const el = document.getElementById('fileList');
+    if (uploadedFiles.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = uploadedFiles.map((f, i) => `
+        <div class="file-item">
+            <div>
+                <span class="file-name">📄 ${f.name}</span>
+                <span class="file-info"> · ${f.headers.length}列 · ${f.data.length}行 · ${f.detectedEncoding || f.encoding}</span>
+            </div>
+            <div class="file-actions">
+                <button class="btn btn-tiny btn-secondary" onclick="showEncodingSettings(${i})">编码</button>
+                <button class="btn btn-tiny btn-danger" onclick="removeFile(${i})">删除</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function removeFile(idx) {
+    uploadedFiles.splice(idx, 1);
+    refreshFileList();
+    showPreview();
+    populateAllColumns();
+    populateExtractColumns();
+}
+
+// ============================================================
+// 预览
+// ============================================================
+function showPreview() {
+    const card = document.getElementById('previewCard');
+    if (uploadedFiles.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    // 合并所有文件数据
+    const mergedHeaders = uploadedFiles[0].headers;
+    const mergedData = [];
+    for (const f of uploadedFiles) {
+        mergedData.push(...f.data);
+    }
+    document.getElementById('previewBadge').textContent = `${mergedData.length} 行 · ${mergedHeaders.length} 列`;
+    
+    const thead = document.getElementById('previewHead');
+    const tbody = document.getElementById('previewBody');
+    thead.innerHTML = '<tr>' + mergedHeaders.map(h => `<th>${escHtml(h)}</th>`).join('') + '</tr>';
+    const previewRows = mergedData.slice(0, 50);
+    tbody.innerHTML = previewRows.map(row =>
+        '<tr>' + mergedHeaders.map(h => `<td>${escHtml(String(row[h] ?? ''))}</td>`).join('') + '</tr>'
+    ).join('');
+    if (mergedData.length > 50) {
+        tbody.innerHTML += `<tr><td colspan="${mergedHeaders.length}" style="text-align:center;color:rgba(255,255,255,0.4)">... 还有 ${mergedData.length - 50} 行</td></tr>`;
+    }
+    
+    // 显示Tabs
+    document.getElementById('mainTabs').style.display = 'flex';
+}
+
+// ============================================================
+// 填充列选择器
+// ============================================================
+function getAllMergedHeaders() {
+    const s = new Set();
+    for (const f of uploadedFiles) { f.headers.forEach(h => s.add(h)); }
+    return [...s];
+}
+
+function populateAllColumns() {
+    const cols = getAllMergedHeaders();
+    const opts = '<option value="">-- 请选择 --</option>' + cols.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('');
+    
+    // 全国
+    document.getElementById('nVolteCountCol').innerHTML = opts;
+    document.getElementById('nVonrCountCol').innerHTML = opts;
+    // G2地市
+    document.getElementById('g2cCityCol').innerHTML = opts;
+    document.getElementById('g2cProvCol').innerHTML = opts;
+    document.getElementById('g2cLevelCol').innerHTML = opts;
+    document.getElementById('g2cVolteCol').innerHTML = opts;
+    document.getElementById('g2cVonrCol').innerHTML = opts;
+    // G2区县
+    document.getElementById('g2dDistCol').innerHTML = opts;
+    document.getElementById('g2dCityCol').innerHTML = opts;
+    document.getElementById('g2dProvCol').innerHTML = opts;
+    document.getElementById('g2dLevelCol').innerHTML = opts;
+    document.getElementById('g2dVolteCol').innerHTML = opts;
+    document.getElementById('g2dVonrCol').innerHTML = opts;
+    // G2厂家
+    document.getElementById('g2vVendorCol').innerHTML = opts;
+    document.getElementById('g2vProvCol').innerHTML = opts;
+    document.getElementById('g2vLevelCol').innerHTML = opts;
+    document.getElementById('g2vVolteCol').innerHTML = opts;
+    document.getElementById('g2vVonrCol').innerHTML = opts;
+
+    // 全局列显示
+    document.getElementById('allColumnsDisplay').innerHTML = cols.map(c => `<span class="tag">${escHtml(c)}</span>`).join('');
+}
+
+function populateExtractColumns() {
+    const cols = getAllMergedHeaders();
+    const opts = '<option value="">-- 选择列 --</option>' + cols.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('');
+    
+    // VoLTE
+    document.getElementById('volteLowConnCol').innerHTML = opts;
+    document.getElementById('volteLowSrvccCol').innerHTML = opts;
+    document.getElementById('volteHighDropCol').innerHTML = opts;
+    document.getElementById('volteUpBadCol').innerHTML = opts;
+    document.getElementById('volteDownBadCol').innerHTML = opts;
+    
+    // VoNR
+    document.getElementById('vonrConnCol').innerHTML = opts;
+    document.getElementById('vonrVoiceDropCol').innerHTML = opts;
+    document.getElementById('vonrSwitchCol').innerHTML = opts;
+    document.getElementById('vonrVideoDropCol').innerHTML = opts;
+    document.getElementById('vonrDemodCol').innerHTML = opts;
+    document.getElementById('vonrXrLossCol').innerHTML = opts;
+}
+
+// ============================================================
+// Tab 切换
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ============================================================
+// 计算类型选择
+// ============================================================
+function setCalcType(type) {
+    currentCalcType = type;
+    document.getElementById('calcConfigCard').style.display = 'block';
+    
+    // 隐藏所有配置
+    document.getElementById('nationalConfig').style.display = 'none';
+    document.getElementById('g2CityConfig').style.display = 'none';
+    document.getElementById('g2DistrictConfig').style.display = 'none';
+    document.getElementById('g2VendorConfig').style.display = 'none';
+    
+    const labels = {
+        'national': '🌐 全国指标',
+        'g2-city': '🗺️ G2省分地市',
+        'g2-district': '🏘️ G2省分区县',
+        'g2-vendor': '🏭 G2省分厂家'
+    };
+    document.getElementById('calcTypeLabel').textContent = labels[type] || '';
+    
+    const map = {
+        'national': 'nationalConfig',
+        'g2-city': 'g2CityConfig',
+        'g2-district': 'g2DistrictConfig',
+        'g2-vendor': 'g2VendorConfig'
+    };
+    document.getElementById(map[type]).style.display = 'block';
+}
+
+// ============================================================
+// 核心计算引擎
+// ============================================================
+function getMergedData() {
+    const all = [];
+    for (const f of uploadedFiles) all.push(...f.data);
+    return all;
+}
+
+function filterG2(data, provCol, levelCol) {
+    return data.filter(row => {
+        const prov = String(row[provCol] || '').trim();
+        const lvl = String(row[levelCol] || '').trim();
+        return prov === 'G2' && lvl === '02';
+    });
+}
+
+function safeNum(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    const n = parseFloat(String(val).replace(/,/g, ''));
+    return isNaN(n) ? 0 : n;
+}
+
+function runCalculation() {
+    const allData = getMergedData();
+    if (allData.length === 0) { alert('请先上传数据文件'); return; }
+    
+    let results = [];
+    const labels = { national:'全国', 'g2-city':'G2省-分地市', 'g2-district':'G2省-分区县', 'g2-vendor':'G2省-分厂家' };
+    
+    switch(currentCalcType) {
+        case 'national':
+            results = calcNational(allData);
+            break;
+        case 'g2-city':
+            results = calcG2Group(allData, 
+                document.getElementById('g2cCityCol').value,
+                document.getElementById('g2cProvCol').value,
+                document.getElementById('g2cLevelCol').value,
+                document.getElementById('g2cVolteCol').value,
+                document.getElementById('g2cVonrCol').value,
+                '地市'
+            );
+            break;
+        case 'g2-district':
+            results = calcG2Group(allData,
+                document.getElementById('g2dDistCol').value,
+                document.getElementById('g2dProvCol').value,
+                document.getElementById('g2dLevelCol').value,
+                document.getElementById('g2dVolteCol').value,
+                document.getElementById('g2dVonrCol').value,
+                '区县'
+            );
+            break;
+        case 'g2-vendor':
+            results = calcG2Group(allData,
+                document.getElementById('g2vVendorCol').value,
+                document.getElementById('g2vProvCol').value,
+                document.getElementById('g2vLevelCol').value,
+                document.getElementById('g2vVolteCol').value,
+                document.getElementById('g2vVonrCol').value,
+                '厂家'
+            );
+            break;
+        default:
+            alert('请先选择计算维度'); return;
+    }
+    
+    calcResultData = results;
+    displayResults(results, labels[currentCalcType]);
+}
+
+// ---- 全国计算 ----
+function calcNational(data) {
+    const vc = document.getElementById('nVolteCountCol').value;
+    const nc = document.getElementById('nVonrCountCol').value;
+    if (!vc || !nc) { alert('请选择VoLTE和VoNR数量列'); return []; }
+    
+    let totalVolte = 0, totalVonr = 0;
+    for (const row of data) {
+        totalVolte += safeNum(row[vc]);
+        totalVonr += safeNum(row[nc]);
+    }
+    
+    return [{
+        '维度': '全国合计',
+        'VoLTE低质高差小区数量': Math.round(totalVolte),
+        'VoNR低质高差小区数量': Math.round(totalVonr),
+        '数据行数': data.length
+    }];
+}
+
+// ---- G2分组计算通用 ----
+function calcG2Group(data, groupCol, provCol, levelCol, volteCol, vonrCol, groupLabel) {
+    if (!groupCol || !provCol || !levelCol || !volteCol || !vonrCol) {
+        alert(`请完整配置${groupLabel}相关的所有列`); return [];
+    }
+    
+    const filtered = filterG2(data, provCol, levelCol);
+    if (filtered.length === 0) {
+        alert(`未找到符合条件的数据（province=G2 且 provlevel=02）。请检查列名是否正确。\n当前筛选列：${provCol} / ${levelCol}`);
+        return [];
+    }
+    
+    // 分组聚合
+    const groups = {};
+    for (const row of filtered) {
+        const key = String(row[groupCol] || '(空)').trim();
+        if (!groups[key]) groups[key] = { volteTotal: 0, vonrTotal: 0, count: 0 };
+        groups[key].volteTotal += safeNum(row[volteCol]);
+        groups[key].vonrTotal += safeNum(row[vonrCol]);
+        groups[key].count++;
+    }
+    
+    const results = Object.entries(groups).map(([key, v]) => ({
+        [groupLabel]: key,
+        'VoLTE低质高差小区数量': Math.round(v.volteTotal),
+        'VoNR低质高差小区数量': Math.round(v.vonrTotal),
+        '数据行数': v.count
+    }));
+    
+    // 添加合计行
+    const sumRow = { [groupLabel]: '** 合计 **', 'VoLTE低质高差小区数量': 0, 'VoNR低质高差小区数量': 0, '数据行数': filtered.length };
+    for (const r of results) {
+        sumRow['VoLTE低质高差小区数量'] += r['VoLTE低质高差小区数量'];
+        sumRow['VoNR低质高差小区数量'] += r['VoNR低质高差小区数量'];
+    }
+    results.push(sumRow);
+    
+    return results;
+}
+
+// ============================================================
+// 结果展示
+// ============================================================
+function displayResults(results, label) {
+    const card = document.getElementById('resultCard');
+    card.style.display = 'block';
+    document.getElementById('resultBadge').textContent = label + ` · ${results.length} 条`;
+    
+    if (results.length === 0) return;
+    
+    const cols = Object.keys(results[0]);
+    
+    // 汇总卡片
+    const lastRow = results[results.length - 1];
+    const isSumRow = (String(lastRow[cols[0]] || '').includes('合计') || String(lastRow[cols[0]] || '').includes('**'));
+    let sumHtml = '';
+    if (isSumRow) {
+        sumHtml = `
+            <div class="summary-card"><div class="label">VoLTE低质高差小区总数</div><div class="value">${lastRow['VoLTE低质高差小区数量'].toLocaleString()}</div></div>
+            <div class="summary-card"><div class="label">VoNR低质高差小区总数</div><div class="value">${lastRow['VoNR低质高差小区数量'].toLocaleString()}</div></div>
+            <div class="summary-card"><div class="label">数据分组数</div><div class="value">${results.length - 1}</div></div>
+            <div class="summary-card"><div class="label">总数据行数</div><div class="value">${lastRow['数据行数'].toLocaleString()}</div></div>
+        `;
+    } else {
+        const tV = results.reduce((s,r) => s + (r['VoLTE低质高差小区数量']||0), 0);
+        const tN = results.reduce((s,r) => s + (r['VoNR低质高差小区数量']||0), 0);
+        sumHtml = `
+            <div class="summary-card"><div class="label">VoLTE低质高差小区总数</div><div class="value">${tV.toLocaleString()}</div></div>
+            <div class="summary-card"><div class="label">VoNR低质高差小区总数</div><div class="value">${tN.toLocaleString()}</div></div>
+            <div class="summary-card"><div class="label">记录条数</div><div class="value">${results.length}</div></div>
+        `;
+    }
+    document.getElementById('resultSummary').innerHTML = sumHtml;
+    
+    // 表格
+    const thead = document.getElementById('resultHead');
+    const tbody = document.getElementById('resultBody');
+    thead.innerHTML = '<tr>' + cols.map(c => `<th>${escHtml(c)}</th>`).join('') + '</tr>';
+    
+    tbody.innerHTML = results.map((row, idx) => {
+        const isLast = idx === results.length - 1 && isSumRow;
+        const cls = isLast ? ' style="background:rgba(102,126,234,0.1);font-weight:600;"' : '';
+        return '<tr' + cls + '>' + cols.map(c => {
+            let val = row[c];
+            const isNum = (c.includes('数量') || c.includes('行数')) && typeof val === 'number';
+            let cellCls = isNum ? 'num-cell' : '';
+            if (isLast) cellCls += ' highlight-cell';
+            return `<td class="${cellCls} ${isNum?'text-right':''}">${typeof val === 'number' ? val.toLocaleString() : escHtml(String(val))}</td>`;
+        }).join('') + '</tr>';
+    }).join('');
+    
+    // 滚动到结果
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================================
+// VoLTE 数据提取
+// ============================================================
+function extractVoLTE() {
+    const allData = getMergedData();
+    if (allData.length === 0) { alert('请先上传数据'); return; }
+    
+    const configs = [
+        { key: '低接通', colId: 'volteLowConnCol', method: 'count_div_days' },
+        { key: '低SRVCC', colId: 'volteLowSrvccCol', method: 'count_div_days' },
+        { key: '高掉话(1/2)', colId: 'volteHighDropCol', method: 'count_div_days' },
+        { key: '上行质差包', colId: 'volteUpBadCol', method: 'overlap_count' },
+        { key: '下行质差包', colId: 'volteDownBadCol', method: 'overlap_count' }
+    ];
+    
+    const results = extractMetrics(allData, configs);
+    volteExtractData = results;
+    displayExtractResult(results, 'volte', 'VoLTE提取结果');
+}
+
+// ============================================================
+// VoNR 数据提取
+// ============================================================
+function extractVoNR() {
+    const allData = getMergedData();
+    if (allData.length === 0) { alert('请先上传数据'); return; }
+    
+    const configs = [
+        { key: 'VoNR接通', colId: 'vonrConnCol', method: 'count_div_days' },
+        { key: 'VoNR语音掉话', colId: 'vonrVoiceDropCol', method: 'count_div_days' },
+        { key: 'volte信令切换', colId: 'vonrSwitchCol', method: 'count_div_days' },
+        { key: 'VoLTE视频掉话', colId: 'vonrVideoDropCol', method: 'count_div_days' },
+        { key: 'VoNR解调话', colId: 'vonrDemodCol', method: 'count_div_days' },
+        { key: 'VoXR上下行高丢包', colId: 'vonrXrLossCol', method: 'overlap_count' }
+    ];
+    
+    const results = extractMetrics(allData, configs);
+    vonrExtractData = results;
+    displayExtractResult(results, 'vonr', 'VoNR提取结果');
+}
+
+// ---- 通用提取引擎 ----
+function extractMetrics(data, configs) {
+    const results = [];
+    
+    for (const cfg of configs) {
+        const colVal = document.getElementById(cfg.colId).value;
+        if (!colVal) {
+            results.push({ '指标名称': cfg.key, '选定列': '(未选择)', '小区数量': '-', '说明': '请选择对应列' });
+            continue;
+        }
+        
+        // 统计非空值的行数作为小区数量
+        let count = 0;
+        for (const row of data) {
+            const v = row[colVal];
+            if (v !== null && v !== undefined && String(v).trim() !== '') count++;
+        }
+        
+        results.push({
+            '指标名称': cfg.key,
+            '选定列': colVal,
+            '小区数量': count,
+            '计算方法': cfg.method === 'count_div_days' ? 'cg1数量(非空计数)' : 'cg1重叠数量',
+            '备注': cfg.method === 'count_div_days' ? '数量÷设定年月自然天数' : '多列交集去重计数'
+        });
+    }
+    
+    return results;
+}
+
+function displayExtractResult(results, prefix, title) {
+    const cardId = prefix + 'ResultCard';
+    const headId = prefix + 'Head';
+    const bodyId = prefix + 'Body';
+    const card = document.getElementById(cardId);
+    card.style.display = 'block';
+    
+    const cols = Object.keys(results[0]);
+    document.getElementById(headId).innerHTML = '<tr>' + cols.map(c => `<th>${escHtml(c)}</th>`).join('') + '</tr>';
+    document.getElementById(bodyId).innerHTML = results.map(row =>
+        '<tr>' + cols.map(c => {
+            const v = row[c];
+            const isNum = c === '小区数量' && typeof v === 'number';
+            return `<td class="${isNum?'num-cell text-right':''}">${isNum ? v.toLocaleString() : escHtml(String(v))}</td>`;
+        }).join('') + '</tr>'
+    ).join('');
+    
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================================
+// 导出
+// ============================================================
+function exportResult() {
+    if (!calcResultData || calcResultData.length === 0) { alert('无数据可导出'); return; }
+    exportToExcel(calcResultData, '5G两网高低质差小区占比_计算结果');
+}
+
+function exportResultCSV() {
+    if (!calcResultData || calcResultData.length === 0) { alert('无数据可导出'); return; }
+    exportToCSV(calcResultData, '5G两网高低质差小区占比_计算结果');
+}
+
+function exportVoLTE() {
+    if (!volteExtractData || volteExtractData.length === 0) { alert('无数据可导出'); return; }
+    exportToExcel(volteExtractData, 'VoLTE两网高低质差小区_提取结果');
+}
+
+function exportVoNR() {
+    if (!vonrExtractData || vonrExtractData.length === 0) { alert('无数据可导出'); return; }
+    exportToExcel(vonrExtractData, 'VoNR两网高低质差小区_提取结果');
+}
+
+function exportToExcel(data, filename) {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, filename + '.xlsx');
+}
+
+function exportToCSV(data, filename) {
+    const cols = Object.keys(data[0]);
+    let csv = '\uFEFF' + cols.join(',') + '\n';  // BOM for Excel
+    for (const row of data) {
+        csv += cols.map(c => {
+            let v = String(row[c] ?? '');
+            if (v.includes(',') || v.includes('"') || v.includes('\n')) v = '"' + v.replace(/"/g, '""') + '"';
+            return v;
+        }).join(',') + '\n';
+    }
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename + '.csv'; a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// 使用说明书
+// ============================================================
+function toggleGuide() {
+    document.getElementById('guideModal').classList.toggle('show');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('guideModal').classList.remove('show'); });
+
+// ============================================================
+// 工具函数
+// ============================================================
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s; return d.innerHTML;
+}
+function escAttr(s) {
+    return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
