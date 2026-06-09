@@ -1850,5 +1850,98 @@ function hideLoading(){document.getElementById('loadingMask').classList.remove('
   });
 });
 </script>
+
+
+<!-- 使用说明浮动按钮 -->
+<button id="helpFab" onclick="toggleGuide()" style="position:fixed;bottom:30px;right:30px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#e91e63,#9c27b0);border:none;color:white;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(233,30,99,0.5);z-index:9999;transition:transform 0.3s,box-shadow 0.3s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 30px rgba(233,30,99,0.7)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 20px rgba(233,30,99,0.5)'">📖</button>
+
+<!-- 使用说明弹窗 -->
+<div id="guideModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:20px;">
+    <div style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:820px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+            <h2 style="color:rgba(255,255,255,0.95);font-size:19px;">📡 集团4/5G两低两高质差小区数量计算 — 使用说明</h2>
+            <button onclick="toggleGuide()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;padding:4px 8px;" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='#999'">✕</button>
+        </div>
+        <div style="padding:24px;overflow-y:auto;color:rgba(255,255,255,0.82);font-size:14px;line-height:1.85;">
+
+            <h3 style="color:#e91e63;font-size:16px;margin:20px 0 10px 0;">📋 一、工具概述</h3>
+            <p style="margin-bottom:12px;">本工具用于计算<strong>集团级4G VoLTE和5G VoNR的"两低两高"质差小区数量</strong>，支持全国、省份、地市、区县、厂家五个维度的统计分析。</p>
+            <div style="background:rgba(76,175,80,0.08);border-left:3px solid #4caf50;padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0;font-size:13px;">✅ 所有数据在浏览器本地处理，<strong>不会上传到任何服务器</strong>，确保数据安全。</div>
+
+            <h3 style="color:#e91e63;font-size:16px;margin:20px 0 10px 0;">📊 二、"两低两高"指标说明</h3>
+            
+            <p style="margin-bottom:6px;"><span style="background:rgba(102,126,234,0.2);color:#667eea;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-right:4px;">VoLTE（4G）</span></p>
+            <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
+                <tr><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(102,126,234,0.15);color:#a78bfa;">指标类型</th><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(102,126,234,0.15);color:#a78bfa;">指标名称</th><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(102,126,234,0.15);color:#a78bfa;">计算规则</th></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">低接通</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoLTE语音接通率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">原始CGI数 ÷ 30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">低SRVCC</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">SRVCC切换成功率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">原始CGI数 ÷ 30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">高掉话</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoLTE掉话率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">原始CGI数 ÷ 30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">上行高丢包</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoLTE上行RTP丢包率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">去重后直接计数</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">下行高丢包</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoLTE下行RTP丢包率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">去重后直接计数</td></tr>
+            </table>
+
+            <p style="margin-bottom:6px;margin-top:14px;"><span style="background:rgba(233,30,99,0.2);color:#e91e63;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-right:4px;">VoNR/ViNR（5G）</span></p>
+            <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;">
+                <tr><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(233,30,99,0.15);color:#f48fb1;">指标类型</th><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(233,30,99,0.15);color:#f48fb1;">指标名称</th><th style="padding:8px 12px;text-align:left;border:1px solid rgba(255,255,255,0.08);background:rgba(233,30,99,0.15);color:#f48fb1;">计算规则</th></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">低接通</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR语音接通率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">低切换</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR切换成功率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">高掉话</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR掉话率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">Vinr低接通</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">ViNR视频接通率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">Vinr低切换</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">ViNR切换成功率低</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">Vonr高掉话</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR掉话率高一档</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">Vinr高掉话</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">ViNR掉话率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">÷30</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">上行高丢包</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR/ViNR上行RTP丢包率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">去重后直接计数</td></tr>
+                <tr><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">下行高丢包</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">VoNR/ViNR下行RTP丢包率高</td><td style="padding:8px 12px;border:1px solid rgba(255,255,255,0.06);">去重后直接计数</td></tr>
+            </table>
+
+            <div style="background:rgba(255,152,0,0.08);border-left:3px solid #ff9800;padding:12px 16px;margin:14px 0;border-radius:0 8px 8px 0;font-size:13px;">⚠️ <strong>÷30 规则：</strong>同一小区一天内可能被多次统计，÷30 用于估算独立小区数。<strong>丢包类指标（4个）</strong>采用去重后直接计数。</div>
+
+            <h3 style="color:#e91e63;font-size:16px;margin:20px 0 10px 0;">🔧 三、使用步骤</h3>
+            <ol style="margin:0 0 16px 20px;color:rgba(255,255,255,0.75);">
+                <li style="margin-bottom:8px;"><strong>上传质差数据文件</strong> — 支持 .xlsx/.xls/.csv/.txt，可多文件合并</li>
+                <li style="margin-bottom:8px;"><strong>列映射配置</strong> — 系统自动检测列名，如不正确请手动修改下拉框（必填：CGI列、分类列）</li>
+                <li style="margin-bottom:8px;"><strong>上传工参文件（可选）</strong> — 如需按地市/区县/厂家维度分析，需上传4G/5G工参文件，包含 CGI、城市、区县、设备厂商 列</li>
+                <li style="margin-bottom:8px;"><strong>选择计算模式</strong> — 全国模式（一键汇总所有省份）或单省模式（选择特定省份+细分维度）</li>
+                <li style="margin-bottom:8px;"><strong>查看结果</strong> — 表格展示各指标质差小区数量，支持导出Excel</li>
+            </ol>
+
+            <h3 style="color:#e91e63;font-size:16px;margin:20px 0 10px 0;">❓ 四、常见问题</h3>
+            <p style="margin-bottom:6px;"><strong>Q：为什么有些维度显示为"未知"？</strong></p>
+            <p style="margin-bottom:12px;color:rgba(255,255,255,0.65);font-size:13px;">A：该CGI在工参文件中未找到对应信息。请检查：①工参是否已上传 ②列映射是否正确 ③CGI格式是否一致</p>
+            <p style="margin-bottom:6px;"><strong>Q：省级总数和各地市之和为什么不完全相等？</strong></p>
+            <p style="margin-bottom:12px;color:rgba(255,255,255,0.65);font-size:13px;">A：微小差异来自÷30取整时的舍入误差，属于正常现象。</p>
+            <p style="margin-bottom:6px;"><strong>Q：支持多大的文件？</strong></p>
+            <p style="margin-bottom:12px;color:rgba(255,255,255,0.65);font-size:13px;">A：建议单个文件不超过100MB。工具已做异步分片处理避免卡顿。</p>
+            <p style="margin-bottom:6px;"><strong>Q：数据安全吗？</strong></p>
+            <p style="margin-bottom:12px;color:rgba(255,255,255,0.65);font-size:13px;">A：<strong>完全安全</strong>。浏览器本地处理，不上传任何服务器。关闭页面即消失。</p>
+
+            <h3 style="color:#e91e63;font-size:16px;margin:20px 0 10px 0;">⚙️ 五、技术细节</h3>
+            <ul style="margin:0 0 16px 20px;color:rgba(255,255,255,0.65);font-size:13px;">
+                <li>纯前端离线运行，依赖 SheetJS (XLSX) 解析 Excel</li>
+                <li>大数据量异步分片（每5000行）防止UI卡顿</li>
+                <li>多Sheet自动合并 + CGI去重</li>
+                <li>暗色主题，响应式布局，支持移动端</li>
+                <li>点击右下角 📖 或按 Esc 键查看/关闭本说明</li>
+            </ul>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleGuide() {
+    const modal = document.getElementById('guideModal');
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+}
+document.getElementById('guideModal').addEventListener('click', function(e) {
+    if (e.target === this) toggleGuide();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const m = document.getElementById('guideModal');
+        if (m.style.display === 'flex') toggleGuide();
+    }
+});
+</script>
 </body>
 </html>
