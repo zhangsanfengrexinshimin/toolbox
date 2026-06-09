@@ -45,6 +45,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC
 .file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06);font-size:13px}
 .file-item .fname{color:rgba(255,255,255,.85);font-weight:500}
 .file-item .finfo{color:rgba(255,255,255,.35);font-size:12px;margin-left:8px}
+.btn-del{background:none;border:none;color:rgba(255,107,107,.7);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px;margin-left:8px;transition:all .2s}
+.btn-del:hover{color:#ff6b6b;background:rgba(255,107,107,.15)}
 
 .btn{padding:9px 18px;border:none;border-radius:10px;font-size:14px;cursor:pointer;transition:all .3s;font-weight:500}
 .btn-primary{background:rgba(102,126,234,.2);color:rgba(102,126,234,1);border:1px solid rgba(102,126,234,.4)}
@@ -65,10 +67,10 @@ select option{background:#1a1a2e;color:#fff}
 
 .tbl-wrap{overflow-x:auto;border-radius:10px;margin-top:12px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:rgba(102,126,234,.12);color:rgba(167,139,250,.95);padding:9px 12px;text-align:left;font-weight:600;white-space:nowrap;border-bottom:2px solid rgba(102,126,234,.25);position:sticky;top:0}
-tbody td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.7)}
+thead th{background:rgba(102,126,234,.12);color:rgba(167,139,250,.95);padding:9px 12px;text-align:center;font-weight:600;white-space:nowrap;border-bottom:2px solid rgba(102,126,234,.25);position:sticky;top:0}
+tbody td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.7);text-align:center}
 tbody tr:hover{background:rgba(102,126,234,.05)}
-.num{font-family:"SF Mono",Consolas,monospace;color:rgba(130,204,255,.9);text-align:right}
+.num{font-family:"SF Mono",Consolas,monospace;color:rgba(130,204,255,.9);text-align:center}
 .highlight{color:#ff9800!important;font-weight:600}
 
 .alert{padding:11px 16px;border-radius:10px;margin-bottom:12px;font-size:13px}
@@ -106,6 +108,10 @@ tbody tr:hover{background:rgba(102,126,234,.05)}
 .format-badge.multi{background:rgba(255,152,0,.15);color:#ffb74d;border:1px solid rgba(255,152,0,.3)}
 .format-badge.single{background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3)}
 </style>
+
+<script>
+// Inline Web Worker for parsing large Excel files without blocking UI
+</script>
 </head>
 <body>
 
@@ -172,16 +178,28 @@ tbody tr:hover{background:rgba(102,126,234,.05)}
         <div class="file-list" id="listVoNR"></div>
       </div>
 
-      <!-- 工参 -->
-      <div>
-        <div style="font-size:14px;font-weight:600;color:rgba(76,175,80,.9);margin-bottom:8px">③ 工参文件（可选，用于地市/区县/厂家维度）</div>
-        <div class="upload-area" id="upGongcan" onclick="document.getElementById('fileGongcan').click()">
+      <!-- 4G工参 -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:14px;font-weight:600;color:rgba(76,175,80,.9);margin-bottom:8px">③ 4G工参文件（可选，用于VoLTE地市/区县/厂家维度）</div>
+        <div class="upload-area" id="upGongcan4G" onclick="document.getElementById('fileGongcan4G').click()">
           <div class="upload-icon">🗺️</div>
-          <div class="upload-text">点击或拖拽上传工参文件（可多选）</div>
-          <div class="upload-hint">需包含 CGI、地市、区县、厂家 列</div>
+          <div class="upload-text">点击或拖拽上传 4G工参文件（可多选）</div>
+          <div class="upload-hint">需包含 CGI、地市、区县、厂家 列，支持多个文件合并</div>
         </div>
-        <input type="file" id="fileGongcan" class="file-input" multiple accept=".xlsx,.xls,.csv,.txt" onchange="handleGongcanFiles(this)">
-        <div class="file-list" id="listGongcan"></div>
+        <input type="file" id="fileGongcan4G" class="file-input" accept=".xlsx,.xls,.csv,.txt" multiple onchange="handleGongcan4GFile(this)">
+        <div class="file-list" id="listGongcan4G"></div>
+      </div>
+
+      <!-- 5G工参 -->
+      <div>
+        <div style="font-size:14px;font-weight:600;color:rgba(233,30,99,.9);margin-bottom:8px">④ 5G工参文件（可选，用于VoNR地市/区县/厂家维度）</div>
+        <div class="upload-area" id="upGongcan5G" onclick="document.getElementById('fileGongcan5G').click()">
+          <div class="upload-icon">🗺️</div>
+          <div class="upload-text">点击或拖拽上传 5G工参文件（可多选）</div>
+          <div class="upload-hint">需包含 CGI、地市、区县、厂家 列，支持多个文件合并</div>
+        </div>
+        <input type="file" id="fileGongcan5G" class="file-input" accept=".xlsx,.xls,.csv,.txt" multiple onchange="handleGongcan5GFile(this)">
+        <div class="file-list" id="listGongcan5G"></div>
       </div>
 
       <div style="margin-top:18px;display:flex;gap:10px">
@@ -279,7 +297,6 @@ let vonrFormat = null;
 // Single-sheet: { name, format:'single-sheet', headers, rows, encoding }
 let volteData = null;
 let vonrData = null;
-let gongcanData = [];   // [{name, headers, rows, encoding}]
 // 4G和5G工参分开存储
 let gongcan4G = [];     // [{name, headers, rows}]
 let gongcan5G = [];     // [{name, headers, rows}]
@@ -287,13 +304,13 @@ let currentMode = null;
 let calcResult = null;
 
 // Category definitions
-// VoLTE categories: 接通/SRVCC/掉话 → ÷30; 丢包 → count distinct
+// VoLTE categories: 接通/SRVCC/掉话 → ÷30; 丢包 → CGI去重直接计数
 const VOLTE_DIV30_CATS = ['低接通','低SRVCC','高掉话'];
 const VOLTE_COUNT_CATS = ['上行高丢包','下行高丢包'];
 const VOLTE_ALL_CATS = [...VOLTE_DIV30_CATS, ...VOLTE_COUNT_CATS];
 
-// VoNR categories: 接通/切换/掉话 → ÷30; 丢包 → count distinct
-const VONR_DIV30_CATS = ['VoNR低接通','ViNR低接通','VoNR低切换','ViNR低切换','vonr低切换','vinr低切换','NR低切换','VoNR高掉话','ViNR高掉话'];
+// VoNR categories: 接通/切换/掉话 → ÷30; 丢包 → CGI去重直接计数
+const VONR_DIV30_CATS = ['VoNR低接通','ViNR低接通','vonr低切换','vinr低切换','VoNR高掉话','ViNR高掉话'];
 const VONR_COUNT_CATS = ['上行高丢包','下行高丢包'];
 const VONR_ALL_CATS = [...VONR_DIV30_CATS, ...VONR_COUNT_CATS];
 
@@ -329,33 +346,39 @@ function getVolteCategory(sheetName) {
 }
 
 // Sheet name to category mapping for VoNR multi-sheet
-// Keys are prefixes/patterns to match against actual sheet names
+// 只识别包含"VoNR"关键字的指标（大小写不敏感），剔除纯"NR"指标
 const VONR_SHEET_PATTERNS = [
-  { pattern: /VoNR.*低接通/i, cat: 'VoNR低接通' },
-  { pattern: /ViNR.*低接通/i, cat: 'ViNR低接通' },
-  { pattern: /VoNR.*低切换/i, cat: 'VoNR低切换' },
-  { pattern: /ViNR.*低切换/i, cat: 'ViNR低切换' },
-  { pattern: /vonr.*低切换/i, cat: 'vonr低切换' },
-  { pattern: /vinr.*低切换/i, cat: 'vinr低切换' },
-  { pattern: /NR.*低切换/i, cat: 'NR低切换' },
-  { pattern: /VoNR.*高掉话/i, cat: 'VoNR高掉话' },
-  { pattern: /ViNR.*高掉话/i, cat: 'ViNR高掉话' },
-  { pattern: /上行高丢包/i, cat: '上行高丢包' },
-  { pattern: /下行高丢包/i, cat: '下行高丢包' },
+  // 接通类
+  { pattern: /^VoNR.*低接通/i, cat: 'VoNR低接通' },
+  { pattern: /^ViNR.*低接通/i, cat: 'ViNR低接通' },
+  // 切换类（仅小写vonr/vinr，不含大写VoNR/ViNR）
+  { pattern: /^vonr.*低切换/i, cat: 'vonr低切换' },
+  { pattern: /^vinr.*低切换/i, cat: 'vinr低切换' },
+  // 掉话类
+  { pattern: /^VoNR.*高掉话/i, cat: 'VoNR高掉话' },
+  { pattern: /^ViNR.*高掉话/i, cat: 'ViNR高掉话' },
+  // 丢包类 — sheet名="VoNR 上行高丢包"（有空格）或"VoNR下行高丢包"（无空格）
+  { pattern: /^VoNR\s*上行高丢包/i, cat: '上行高丢包' },
+  { pattern: /^VoNR.*下行高丢包/i, cat: '下行高丢包' },
 ];
 
 // Legacy exact match map for backward compatibility
 const VONR_SHEET_MAP = {
+  // 接通类
   'VoNR低接通': 'VoNR低接通',
   'ViNR低接通': 'ViNR低接通',
-  'vonr低切换1': 'vonr低切换',
+  // 切换类（仅小写vonr/vinr）
   'vonr低切换': 'vonr低切换',
+  'vonr低切换1': 'vonr低切换',
   'vinr低切换': 'vinr低切换',
-  'VoNR高掉话1': 'VoNR高掉话',
+  // 掉话类
   'VoNR高掉话': 'VoNR高掉话',
+  'VoNR高掉话1': 'VoNR高掉话',
   'ViNR高掉话': 'ViNR高掉话',
-  '上行高丢包': '上行高丢包',
-  '下行高丢包': '下行高丢包',
+  // 丢包类 — 注意"VoNR 上行高丢包"中间有空格
+  'VoNR 上行高丢包': '上行高丢包',
+  'VoNR下行高丢包': '下行高丢包',
+  'VoNR上行高丢包': '上行高丢包',
 };
 
 // Helper: get category from sheet name using pattern matching
@@ -406,22 +429,66 @@ function detectDelim(text) {
 
 // ========== File reading ==========
 function readXLSXMultiSheet(file) {
-  return file.arrayBuffer().then(buf => {
-    const wb = XLSX.read(buf, {type:'array'});
-    const sheets = {};
-    for (const sn of wb.SheetNames) {
-      const ws = wb.Sheets[sn];
-      const jsonData = XLSX.utils.sheet_to_json(ws, {defval:''});
-      if (!jsonData.length) continue;
-      const headers = Object.keys(jsonData[0]).map(h=>String(h).trim());
-      const rows = jsonData.map(row => {
-        const o = {};
-        for (const [k,v] of Object.entries(row)) { const key=String(k).trim(); o[key]=(v===null||v===undefined)?'':String(v).trim(); }
-        return o;
-      }).filter(o => headers.some(h => (o[h]||'')!==''));
-      sheets[sn] = {headers, rows};
-    }
-    return {name: file.name, format:'multi-sheet', sheets};
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const wb = XLSX.read(reader.result, {type:'array', cellDates:true});
+        const sheets = {};
+        const lt = document.getElementById('loadingText');
+        const totalSheets = wb.SheetNames.length;
+        
+        for (let si = 0; si < totalSheets; si++) {
+          const sn = wb.SheetNames[si];
+          const ws = wb.Sheets[sn];
+          
+          if (!ws || !ws['!ref']) continue;
+          
+          // Stream rows instead of loading all at once
+          const range = XLSX.utils.decode_range(ws['!ref']);
+          const CHUNK = 3000;
+          const rows = [];
+          
+          // First row as headers
+          let headers = [];
+          for (let C = range.s.c; C <= range.e.c; C++) {
+            const cellRef = XLSX.utils.encode_cell({r: 0, c: C});
+            const cell = ws[cellRef];
+            const v = cell ? String(cell.v || cell.w || '').trim() : '';
+            if (v) headers.push(v);
+          }
+          
+          for (let start = 1; start <= range.e.r; start += CHUNK) {
+            const end = Math.min(start + CHUNK, range.e.r + 1);
+            for (let R = start; R < end; R++) {
+              const rowObj = {};
+              let hasData = false;
+              for (let C = 0; C < headers.length; C++) {
+                const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                const cell = ws[cellRef];
+                const v = cell ? String(cell.v || cell.w || '').trim() : '';
+                rowObj[headers[C]] = v;
+                if (v) hasData = true;
+              }
+              if (hasData) rows.push(rowObj);
+            }
+            // Yield every chunk
+            await new Promise(r => setTimeout(r, 0));
+          }
+          
+          if (rows.length) {
+            sheets[sn] = {headers, rows};
+          }
+          
+          if (lt) lt.textContent = '读取Sheet... ' + sn + ' (' + (si+1) + '/' + totalSheets + ')';
+        }
+        
+        reader.result = null;
+        resolve({name: file.name, format:'multi-sheet', sheets});
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -552,73 +619,326 @@ async function handleVonrFile(input) {
   finally { hideLoading(); input.value=''; }
 }
 
-async function handleGongcanFiles(input) {
-  const files = [...input.files]; if(!files.length) return;
-  showLoading('读取工参数据...');
+// 处理4G工参文件上传（支持多文件，每个文件内所有Sheet合并去重）
+async function handleGongcan4GFile(input) {
+  const files = Array.from(input.files); if(!files.length) return;
+  showLoading('读取4G工参数据...');
   try {
-    // 分开4G和5G工参
-    const gc4G = [], gc5G = [];
-    
-    for (const f of files) {
-      const fname = f.name.toLowerCase();
-      const is5G = fname.includes('5g') || fname.includes('五G') || 
-                   fname.includes('nr') || fname.includes('5g小区');
-      const data = f.name.match(/\.xlsx?$/i) 
-        ? await readXLSX(f) 
-        : await readCSV(f);
-      
-      if (is5G) gc5G.push(data);
-      else gc4G.push(data);
+    for (const file of files) {
+      // 4G工参：所有Sheet均含表头[城市|设备厂商|CGI|区县]，headerRow=0，跳过空行
+      // 4G工参多Sheet时，每个Sheet结构相同，合并所有Sheet并按CGI去重
+      let data;
+      if (file.name.match(/\.xlsx?$/i)) {
+        // readAllGongcanSheets：读取文件中所有Sheet，合并去重
+        data = await readAllGongcanSheets(file, {
+          // 4G工参表头在第1行(索引0)
+          headerRow: 0,
+          // 4G工参关键列
+          keyCols: ['CGI', '城市', '设备厂商', '区县'],
+          // 显示名称
+          label: '4G工参'
+        });
+      } else {
+        data = await readCSV(file);
+      }
+      gongcan4G.push(data);
     }
-    
-    gongcan4G = gc4G;
-    gongcan5G = gc5G;
-    
-    // 显示工参信息
-    const gc4Info = gc4G.length ? `4G工参: ${gc4G.map(g=>g.name).join(', ')}` : '无4G工参';
-    const gc5Info = gc5G.length ? `5G工参: ${gc5G.map(g=>g.name).join(', ')}` : '无5G工参';
-    document.getElementById('gongcanInfo').innerHTML = `📋 ${gc4Info}<br>📋 ${gc5Info}`;
-    document.getElementById('gongcanWarn').style.display = 'none';
-    document.getElementById('gongcanOK').style.display = gc4G.length || gc5G.length ? 'block' : 'none';
-    populateProvSelector();
-  } catch(e) { alert('读取失败: '+e.message); }
+    renderFileList('listGongcan4G', gongcan4G, 'single');
+    updateGongcanInfo();
+  } catch(e) { alert('读取4G工参失败: '+e.message); }
   finally { hideLoading(); input.value=''; }
 }
 
-// 读取单个xlsx文件
-async function readXLSX(file) {
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, {type:'array'});
-  const sn = wb.SheetNames[0];
-  const ws = wb.Sheets[sn];
-  const jsonData = XLSX.utils.sheet_to_json(ws, {defval:''});
-  const headers = jsonData.length ? Object.keys(jsonData[0]).map(h=>String(h).replace(/^\uFEFF/,'').trim()) : [];
-  const rows = jsonData.map(row=>{
-    const o={}; for(const [k,v] of Object.entries(row)){
-      const key=String(k).replace(/^\uFEFF/,'').trim();
-      o[key]=(v===null||v===undefined)?'':String(v).trim();
-    }return o;
+// 处理5G工参文件上传（支持多文件，每个文件内所有Sheet合并去重）
+async function handleGongcan5GFile(input) {
+  const files = Array.from(input.files); if(!files.length) return;
+  showLoading('读取5G工参数据...');
+  try {
+    for (const file of files) {
+      // 5G工参：所有Sheet均含表头[城市|区县|设备厂商|CGI]，headerRow=0
+      let data;
+      if (file.name.match(/\.xlsx?$/i)) {
+        data = await readAllGongcanSheets(file, {
+          headerRow: 0,         // 5G工参第1行就是表头
+          keyCols: ['CGI', '城市', '区县', '设备厂商'],
+          label: '5G工参'
+        });
+      } else {
+        data = await readCSV(file);
+      }
+      gongcan5G.push(data);
+    }
+    renderFileList('listGongcan5G', gongcan5G, 'single');
+    updateGongcanInfo();
+  } catch(e) { alert('读取5G工参失败: '+e.message); }
+  finally { hideLoading(); input.value=''; }
+}
+
+// 更新工参信息显示
+function updateGongcanInfo() {
+  const gc4Info = gongcan4G.length ? `4G工参: ${gongcan4G.length}个文件` : '无4G工参';
+  const gc5Info = gongcan5G.length ? `5G工参: ${gongcan5G.length}个文件` : '无5G工参';
+  const infoEl = document.getElementById('gongcanInfo');
+  if(infoEl) infoEl.innerHTML = `📋 ${gc4Info}<br>📋 ${gc5Info}`;
+  const warnEl = document.getElementById('gongcanWarn');
+  if(warnEl) warnEl.style.display = 'none';
+  const okEl = document.getElementById('gongcanOK');
+  if(okEl) okEl.style.display = (gongcan4G.length || gongcan5G.length) ? 'block' : 'none';
+  populateProvSelector();
+}
+
+// 读取单个xlsx文件（支持工参格式：自动查找目标sheet、跳过前几行）
+// 工参xlsx特点：数据在名为"5G工参"/"4G工参"的sheet中，header在第2行(header=1)，需跳过前2-3行
+async function readXLSX(file, opts) {
+  return new Promise((resolve, reject) => {
+    opts = opts || {};
+    const lt = document.getElementById('loadingText');
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const wb = XLSX.read(reader.result, { type: 'array', cellDates:true });
+        
+        // Find target sheet
+        let sn = wb.SheetNames[0];
+        const sheetKeywords = (opts.sheetKeywords || ['5G工参','4G工参','工参','Sheet1']);
+        for (const kw of sheetKeywords) {
+          const found = wb.SheetNames.find(n => n.includes(kw));
+          if (found) { sn = found; break; }
+        }
+        
+        const ws = wb.Sheets[sn];
+        if (!ws || !ws['!ref']) {
+          reject(new Error('Sheet为空'));
+          return;
+        }
+
+        const neededCols = opts.neededCols || [];
+        const returnAll = opts.returnAll || false;
+        const headerRow = opts.headerRow !== undefined ? opts.headerRow : 0;
+        const skipRowsSet = new Set(opts.skipRows || []);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        // Find columns
+        let colMap = {};
+        for (let C = range.s.c; C <= range.e.c; C++) {
+          const cellRef = XLSX.utils.encode_cell({r: headerRow, c: C});
+          const cell = ws[cellRef];
+          const val = cell ? String(cell.v || cell.w || '').replace(/\uFEFF/g,'').trim() : '';
+          if (!val) continue;
+          colMap[val] = C;
+          if (!returnAll && neededCols.length && !neededCols.some(n => val.includes(n) || n.includes(val))) continue;
+        }
+        const headers = Object.keys(colMap);
+
+        // Read rows with chunking
+        const rows = [];
+        const totalRows = range.e.r + 1;
+        const CHUNK = 5000;
+
+        for (let R = 0; R < totalRows; R++) {
+          if (R === headerRow || skipRowsSet.has(R)) continue;
+          const rowObj = {};
+          let hasData = false;
+          for (const [header, C] of Object.entries(colMap)) {
+            const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+            const cell = ws[cellRef];
+            const v = cell ? String(cell.v || cell.w || '').replace(/\uFEFF/g,'').trim() : '';
+            rowObj[header] = v;
+            if (v) hasData = true;
+          }
+          if (hasData) rows.push(rowObj);
+          
+          if (R % CHUNK === 0 && R > 0) {
+            if (lt) lt.textContent = '后台解析中... ' + Math.round((R/totalRows)*100) + '% (' + rows.length + '行)';
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        resolve({
+          name: file.name,
+          headers: headers,
+          rows: rows,
+          _info: headers.length + '列 · ' + rows.length + '行'
+        });
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsArrayBuffer(file);
   });
-  return {name:file.name+' (Sheet: '+sn+')', headers, rows, encoding:'UTF-8'};
 }
 
 function renderFileList(domId, dataArr, fmt) {
   const el=document.getElementById(domId);
-  el.innerHTML = dataArr.map(d => {
+  el.innerHTML = dataArr.map((d, idx) => {
     let info = '';
     if (fmt === 'multi-sheet') {
       const sheetInfo = Object.entries(d.sheets).map(([sn,sd])=>`${sn}(${sd.rows.length}行)`).join(' · ');
       info = `多Sheet: ${sheetInfo}`;
     } else {
-      info = `${d.headers.length}列 · ${d.rows.length}行`;
+      info = d._info || `${d.headers.length}列 · ${d.rows.length}行`;
     }
-    return `<div class="file-item"><span class="fname">📄 ${d.name}</span><span class="finfo">· ${info}</span></div>`;
+    // 如果headers为空，显示警告
+    const warn = (!fmt || fmt === 'single') && d.headers.length === 0 ? ' <span style="color:#ff6b6b">⚠️ 未识别到列名</span>' : '';
+    return `<div class="file-item"><span class="fname">📄 ${d.name || '未命名文件'}</span><span class="finfo">· ${info}${warn}</span><button class="btn-del" onclick="removeGongcanFile('${domId}', ${idx})" title="删除此文件">✕</button></div>`;
   }).join('');
 }
 
-function renderGongcanList() {
-  const el=document.getElementById('listGongcan');
-  el.innerHTML = gongcanData.map(d=>`<div class="file-item"><span class="fname">📄 ${d.name}</span><span class="finfo">· ${d.headers.length}列 · ${d.rows.length}行</span></div>`).join('');
+// 删除工参文件（4G/5G）
+function removeGongcanFile(domId, idx) {
+  if (domId === 'listGongcan4G' && gongcan4G.length > idx) {
+    gongcan4G.splice(idx, 1);
+    renderFileList('listGongcan4G', gongcan4G, 'single');
+  } else if (domId === 'listGongcan5G' && gongcan5G.length > idx) {
+    gongcan5G.splice(idx, 1);
+    renderFileList('listGongcan5G', gongcan5G, 'single');
+  }
+  updateGongcanInfo();
+}
+
+// 渲染工参文件列表（4G/5G分开显示）
+function renderGongcanLists() {
+  if(gongcan4G.length) renderFileList('listGongcan4G', gongcan4G, 'single');
+  if(gongcan5G.length) renderFileList('listGongcan5G', gongcan5G, 'single');
+}
+
+// 读取工参文件的所有Sheet，合并并按CGI去重
+// opts: { headerRow, keyCols, label }
+async function readAllGongcanSheets(file, opts) {
+  opts = opts || {};
+  const label = opts.label || '工参';
+  const headerRow = opts.headerRow !== undefined ? opts.headerRow : 0;
+  const keyCols = opts.keyCols || ['CGI'];
+
+  const lt = document.getElementById('loadingText');
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        if (lt) lt.textContent = `解析中(${label})... 正在读取文件`;
+        
+        // Use MAIN THREAD XLSX (already loaded via script tag)
+        const wb = XLSX.read(reader.result, { type: 'array', cellDates:true });
+        
+        // Target sheets: all that start with "Sheet" or all sheets
+        let targetSheets = wb.SheetNames.filter(n => n.toLowerCase().startsWith('sheet'));
+        if (!targetSheets.length) targetSheets = wb.SheetNames;
+        
+        const result = {};
+        const CHUNK = 5000; // rows per chunk to avoid UI freeze
+        
+        for (let si = 0; si < targetSheets.length; si++) {
+          const sn = targetSheets[si];
+          const ws = wb.Sheets[sn];
+          if (!ws || !ws['!ref']) continue;
+          
+          const range = XLSX.utils.decode_range(ws['!ref']);
+          
+          // Read headers
+          let colMap = {};
+          for (let C = range.s.c; C <= range.e.c; C++) {
+            const cellRef = XLSX.utils.encode_cell({r: headerRow, c: C});
+            const cell = ws[cellRef];
+            const header = cell ? String(cell.v || cell.w || '').replace(/\uFEFF/g,'').trim() : '';
+            if (!header) continue;
+            colMap[header] = C;
+          }
+          const headers = Object.keys(colMap);
+          
+          // Read data rows in chunks
+          const rows = [];
+          const totalRows = range.e.r + 1;
+          
+          for (let R = 0; R < totalRows; R++) {
+            if (R === headerRow) continue;
+            const rowObj = {};
+            let hasData = false;
+            for (const [header, C] of Object.entries(colMap)) {
+              const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+              const cell = ws[cellRef];
+              const v = cell ? String(cell.v || cell.w || '').replace(/\uFEFF/g,'').trim() : '';
+              rowObj[header] = v;
+              if (v) hasData = true;
+            }
+            if (hasData) rows.push(rowObj);
+            
+            // Yield every CHUNK rows
+            if (R % CHUNK === 0 && R > 0) {
+              if (lt) lt.textContent = `后台解析中(${label})... ${sn} ${Math.round((R/totalRows)*100)}% (${rows.length}行)`;
+              await new Promise(r => setTimeout(r, 0));
+            }
+          }
+          
+          result[sn] = { headers, rows };
+          
+          // Yield between sheets
+          await new Promise(r => setTimeout(r, 0));
+        }
+        
+        // Post-process: merge and dedup (same as before)
+        const sheetNames = Object.keys(result);
+        if (!sheetNames.length) { reject(new Error('未找到有效Sheet')); return; }
+        
+        let allHeaders = [];
+        let allRows = [];
+        let totalRaw = 0;
+        for (const sn of sheetNames) {
+          const sd = result[sn];
+          totalRaw += sd.rows.length;
+          if (allHeaders.length === 0) allHeaders = sd.headers;
+          allRows = allRows.concat(sd.rows);
+        }
+        
+        // CGI dedup
+        let cgiKey = '';
+        for (const h of allHeaders) {
+          if (h.toLowerCase() === 'cgi' || h.toLowerCase() === 'ecgi') { cgiKey = h; break; }
+        }
+        
+        if (cgiKey) {
+          const seen = new Set();
+          const deduped = [];
+          let dupCount = 0;
+          for (const row of allRows) {
+            const k = row[cgiKey];
+            if (k && !seen.has(k)) { seen.add(k); deduped.push(row); }
+            else if (k) dupCount++;
+          }
+          resolve({
+            name: file.name,
+            headers: allHeaders,
+            rows: deduped,
+            _info: `${sheetNames.length}个Sheet · ${totalRaw}行 → 去重${deduped.length}行(去重${dupCount})`,
+            _rawTotal: totalRaw,
+            _dedupCount: deduped.length,
+            _dupCount: dupCount
+          });
+        } else {
+          const seen = new Set();
+          const deduped = [];
+          let dupCount = 0;
+          for (const row of allRows) {
+            const key = JSON.stringify(row);
+            if (!seen.has(key)) { seen.add(key); deduped.push(row); }
+            else dupCount++;
+          }
+          resolve({
+            name: file.name,
+            headers: allHeaders,
+            rows: deduped,
+            _info: `${sheetNames.length}个Sheet · ${totalRaw}行 → 去重${deduped.length}行(去重${dupCount})`,
+            _rawTotal: totalRaw,
+            _dedupCount: deduped.length,
+            _dupCount: dupCount
+          });
+        }
+      } catch(err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsArrayBuffer(file);
+  });
 }
 
 function checkStep1Done() {
@@ -661,14 +981,14 @@ function populateMapping() {
     let mapMsgV = `✅ 已自动识别 ${Object.keys(sheets).length} 个Sheet`;
     if (unmapped.length) mapMsgV += `，其中 ${unmapped.length} 个未匹配: ${unmapped.join(', ')}`;
     html += `<div class="alert alert-success" style="margin-bottom:12px">${mapMsgV}</div>`;
-    html += `<table style="width:100%;margin-bottom:8px;text-align:left"><thead><tr><th style="text-align:left">指标类别</th><th style="text-align:left">Sheet名</th><th style="text-align:right">数据行数</th></tr></thead><tbody>`;
+    html += `<table style="width:100%;margin-bottom:8px;text-align:center"><thead><tr><th style="text-align:center">指标类别</th><th style="text-align:center">Sheet名</th><th style="text-align:center">数据行数</th></tr></thead><tbody>`;
     for (const cat of VOLTE_ALL_CATS) {
       if (mapped[cat]) {
         for (const m of mapped[cat]) {
-          html += `<tr><td style="text-align:left">${cat}</td><td style="text-align:left">${m.sheet}</td><td class="num" style="text-align:right">${m.rows.toLocaleString()}</td></tr>`;
+          html += `<tr><td style="text-align:center">${cat}</td><td style="text-align:center">${m.sheet}</td><td class="num" style="text-align:center">${m.rows.toLocaleString()}</td></tr>`;
         }
       } else {
-        html += `<tr><td style="text-align:left">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:left">未找到</td><td style="text-align:right">-</td></tr>`;
+        html += `<tr><td style="text-align:center">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:center">未找到</td><td style="text-align:center">-</td></tr>`;
       }
     }
     html += `</tbody></table>`;
@@ -715,14 +1035,14 @@ function populateMapping() {
     let mapMsg = `✅ 已自动识别 ${Object.keys(sheets).length} 个Sheet`;
     if (unmapped.length) mapMsg += `，其中 ${unmapped.length} 个未匹配: ${unmapped.join(', ')}`;
     html += `<div class="alert alert-success" style="margin-bottom:12px">${mapMsg}</div>`;
-    html += `<table style="width:100%;margin-bottom:8px;text-align:left"><thead><tr><th style="text-align:left">指标类别</th><th style="text-align:left">Sheet名</th><th style="text-align:right">数据行数</th></tr></thead><tbody>`;
+    html += `<table style="width:100%;margin-bottom:8px;text-align:center"><thead><tr><th style="text-align:center">指标类别</th><th style="text-align:center">Sheet名</th><th style="text-align:center">数据行数</th></tr></thead><tbody>`;
     for (const cat of VONR_ALL_CATS) {
       if (mapped[cat]) {
         for (const m of mapped[cat]) {
-          html += `<tr><td style="text-align:left">${cat}</td><td style="text-align:left">${m.sheet}</td><td class="num" style="text-align:right">${m.rows.toLocaleString()}</td></tr>`;
+          html += `<tr><td style="text-align:center">${cat}</td><td style="text-align:center">${m.sheet}</td><td class="num" style="text-align:center">${m.rows.toLocaleString()}</td></tr>`;
         }
       } else {
-        html += `<tr><td style="text-align:left">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:left">未找到</td><td style="text-align:right">-</td></tr>`;
+        html += `<tr><td style="text-align:center">${cat}</td><td style="color:rgba(244,67,54,.7);text-align:center">未找到</td><td style="text-align:center">-</td></tr>`;
       }
     }
     html += `</tbody></table>`;
@@ -747,20 +1067,45 @@ function populateMapping() {
   }
   html += `</div>`;
 
-  // 工参映射
-  html += `<div>`;
-  html += `<div style="font-size:15px;font-weight:600;color:rgba(76,175,80,.85);margin-bottom:12px">🗺️ 工参数据列映射</div>`;
-  if (gongcanData.length > 0) {
-    const allH = gongcanData[0].headers;
-    const gcOpts = makeOpts(allH);
-    html += `<div class="form-row">`;
-    html += `<div class="form-group"><label>CGI 列</label><select id="mGC_cgi">${gcOpts}</select></div>`;
-    html += `<div class="form-group"><label>地市 列</label><select id="mGC_city">${gcOpts}</select></div>`;
-    html += `<div class="form-group"><label>区县 列</label><select id="mGC_district">${gcOpts}</select></div>`;
-    html += `<div class="form-group"><label>厂家 列</label><select id="mGC_vendor">${gcOpts}</select></div>`;
-    html += `</div>`;
+  // 4G工参映射
+  html += `<div style="margin-bottom:20px">`;
+  html += `<div style="font-size:15px;font-weight:600;color:rgba(76,175,80,.85);margin-bottom:12px">🗺️ 4G工参列映射（用于VoLTE维度计算）</div>`;
+  if (gongcan4G.length > 0) {
+    const allH = gongcan4G[0].headers;
+    if (allH.length === 0) {
+      html += `<div class="alert alert-warning" style="color:#ff6b6b">⚠️ 4G工参文件未识别到列名。可能原因：<br>1. 文件第一行为空<br>2. 文件格式不正确（尝试另存为CSV再导入）<br>3. 文件是空文件</div>`;
+    } else {
+      const gcOpts = makeOpts(allH);
+      html += `<div class="form-row">`;
+      html += `<div class="form-group"><label>CGI 列</label><select id="mGC4G_cgi">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>地市 列</label><select id="mGC4G_city">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>区县 列</label><select id="mGC4G_district">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>厂家 列</label><select id="mGC4G_vendor">${gcOpts}</select></div>`;
+      html += `</div>`;
+    }
   } else {
-    html += `<div class="alert alert-info">未导入工参文件（可选，模式二需要）</div>`;
+    html += `<div class="alert alert-info">未导入4G工参文件（可选，用于VoLTE地市/区县/厂家维度）</div>`;
+  }
+  html += `</div>`;
+
+  // 5G工参映射
+  html += `<div>`;
+  html += `<div style="font-size:15px;font-weight:600;color:rgba(233,30,99,.85);margin-bottom:12px">🗺️ 5G工参列映射（用于VoNR维度计算）</div>`;
+  if (gongcan5G.length > 0) {
+    const allH = gongcan5G[0].headers;
+    if (allH.length === 0) {
+      html += `<div class="alert alert-warning" style="color:#ff6b6b">⚠️ 5G工参文件未识别到列名。可能原因：<br>1. 文件第一行为空<br>2. 文件格式不正确（尝试另存为CSV再导入）<br>3. 文件是空文件</div>`;
+    } else {
+      const gcOpts = makeOpts(allH);
+      html += `<div class="form-row">`;
+      html += `<div class="form-group"><label>CGI 列</label><select id="mGC5G_cgi">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>地市 列</label><select id="mGC5G_city">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>区县 列</label><select id="mGC5G_district">${gcOpts}</select></div>`;
+      html += `<div class="form-group"><label>厂家 列</label><select id="mGC5G_vendor">${gcOpts}</select></div>`;
+      html += `</div>`;
+    }
+  } else {
+    html += `<div class="alert alert-info">未导入5G工参文件（可选，用于VoNR地市/区县/厂家维度）</div>`;
   }
   html += `</div>`;
 
@@ -804,11 +1149,19 @@ function populateMapping() {
     }
   }
 
-  if (gongcanData.length > 0) {
-    autoSel(gongcanData[0].headers, 'mGC_cgi', ['cgi','CGI']);
-    autoSel(gongcanData[0].headers, 'mGC_city', ['地市','城市']);
-    autoSel(gongcanData[0].headers, 'mGC_district', ['区县']);
-    autoSel(gongcanData[0].headers, 'mGC_vendor', ['厂家','厂商','设备厂商']);
+  // Auto-select 4G gongcan columns
+  if (gongcan4G.length > 0) {
+    autoSel(gongcan4G[0].headers, 'mGC4G_cgi', ['cgi','CGI']);
+    autoSel(gongcan4G[0].headers, 'mGC4G_city', ['地市','城市']);
+    autoSel(gongcan4G[0].headers, 'mGC4G_district', ['区县']);
+    autoSel(gongcan4G[0].headers, 'mGC4G_vendor', ['厂家','厂商','设备厂商']);
+  }
+  // Auto-select 5G gongcan columns
+  if (gongcan5G.length > 0) {
+    autoSel(gongcan5G[0].headers, 'mGC5G_cgi', ['cgi','CGI']);
+    autoSel(gongcan5G[0].headers, 'mGC5G_city', ['地市','城市']);
+    autoSel(gongcan5G[0].headers, 'mGC5G_district', ['区县']);
+    autoSel(gongcan5G[0].headers, 'mGC5G_vendor', ['厂家','厂商','设备厂商']);
   }
 }
 
@@ -851,12 +1204,20 @@ function validateMapping() {
     }
   }
 
-  // Check gongcan mapping if imported
-  if (gongcanData.length > 0) {
-    const gcReq = [['mGC_cgi','CGI'],['mGC_city','地市'],['mGC_district','区县'],['mGC_vendor','厂家']];
+  // Check 4G gongcan mapping if imported
+  if (gongcan4G.length > 0) {
+    const gcReq = [['mGC4G_cgi','CGI'],['mGC4G_city','地市'],['mGC4G_district','区县'],['mGC4G_vendor','厂家']];
     for (const [id, label] of gcReq) {
       const el = document.getElementById(id);
-      if (el && !el.value) { alert(`请选择工参 "${label}" 列`); return; }
+      if (el && !el.value) { alert(`请选择4G工参 "${label}" 列`); return; }
+    }
+  }
+  // Check 5G gongcan mapping if imported
+  if (gongcan5G.length > 0) {
+    const gcReq = [['mGC5G_cgi','CGI'],['mGC5G_city','地市'],['mGC5G_district','区县'],['mGC5G_vendor','厂家']];
+    for (const [id, label] of gcReq) {
+      const el = document.getElementById(id);
+      if (el && !el.value) { alert(`请选择5G工参 "${label}" 列`); return; }
     }
   }
   goStep(3);
@@ -871,7 +1232,8 @@ function selectMode(mode) {
   document.getElementById('modeBOpts').style.display = mode==='province'?'block':'none';
   document.getElementById('btnCalc').disabled = false;
   if (mode==='province') {
-    if (!gongcanData.length) {
+    const hasGongcan = gongcan4G.length > 0 || gongcan5G.length > 0;
+    if (!hasGongcan) {
       document.getElementById('gongcanWarn').style.display='block';
       document.getElementById('gongcanOK').style.display='none';
       document.getElementById('btnCalc').disabled=true;
@@ -925,7 +1287,7 @@ function getVolteCGISets(provinceFilter) {
     for (const [sn, sd] of Object.entries(volteData.sheets)) {
       const cat = getVolteCategory(sn);
       if (!cat) continue;
-      if (!result[cat]) result[cat] = new Set();
+      if (!result[cat]) result[cat] = [];
       for (const r of sd.rows) {
         if (provinceFilter && (r[provCol]||'').trim() !== provinceFilter) {
           // If filter is array, check membership
@@ -934,7 +1296,7 @@ function getVolteCGISets(provinceFilter) {
           } else continue;
         }
         const cgi = (r[cgiCol]||'').trim();
-        if (cgi) result[cat].add(cgi);
+        if (cgi) result[cat].push(cgi);
       }
     }
   } else {
@@ -943,7 +1305,7 @@ function getVolteCGISets(provinceFilter) {
       const el = document.getElementById('mVolte_'+cat);
       if (!el || !el.value) continue;
       const flagCol = el.value;
-      result[cat] = new Set();
+      result[cat] = [];;
       for (const r of volteData.rows) {
         if (provinceFilter) {
           const prov = (r[provCol]||'').trim();
@@ -954,7 +1316,7 @@ function getVolteCGISets(provinceFilter) {
         const numVal = Number(r[flagCol]);
         if (v === '1' || v === '是' || v === 'YES' || v === 'yes' || v === 'true' || numVal === 1) {
           const cgi = (r[cgiCol]||'').trim();
-          if (cgi) result[cat].add(cgi);
+          if (cgi) result[cat].push(cgi);
         }
       }
     }
@@ -972,14 +1334,14 @@ function getVonrCGISets(provinceFilter) {
     for (const [sn, sd] of Object.entries(vonrData.sheets)) {
       const cat = getVonrCategory(sn);
       if (!cat) continue;
-      if (!result[cat]) result[cat] = new Set();
+      if (!result[cat]) result[cat] = [];;
       for (const r of sd.rows) {
         if (provinceFilter) {
           const prov = (r[provCol]||'').trim();
           if (Array.isArray(provinceFilter) ? !provinceFilter.includes(prov) : prov !== provinceFilter) continue;
         }
         const cgi = (r[cgiCol]||'').trim();
-        if (cgi) result[cat].add(cgi);
+        if (cgi) result[cat].push(cgi);
       }
     }
   } else {
@@ -987,7 +1349,7 @@ function getVonrCGISets(provinceFilter) {
       const el = document.getElementById('mVonr_'+cat);
       if (!el || !el.value) continue;
       const flagCol = el.value;
-      result[cat] = new Set();
+      result[cat] = [];;
       for (const r of vonrData.rows) {
         if (provinceFilter) {
           const prov = (r[provCol]||'').trim();
@@ -996,7 +1358,7 @@ function getVonrCGISets(provinceFilter) {
         const v = String(r[flagCol]||'').trim();
         if (v === '1' || v === '是' || v === 'YES' || v === 'yes' || v === 'true') {
           const cgi = (r[cgiCol]||'').trim();
-          if (cgi) result[cat].add(cgi);
+          if (cgi) result[cat].push(cgi);
         }
       }
     }
@@ -1010,10 +1372,15 @@ function calcFromCGISets(cgiSets, div30Cats, countCats) {
   let total = 0;
   for (const cat of [...div30Cats, ...countCats]) {
     const cgiSet = cgiSets[cat] || new Set();
+    // ÷30指标：保留重复（直接用array.length）
+    // 丢包指标：必须去重（转Set后取size）
+    const len = div30Cats.includes(cat)
+      ? (Array.isArray(cgiSet) ? cgiSet.length : (cgiSet instanceof Set ? cgiSet.size : 0))
+      : (cgiSet instanceof Set ? cgiSet.size : (new Set(cgiSet)).size);
     if (div30Cats.includes(cat)) {
-      result[cat] = Math.floor(cgiSet.size / 30);
+      result[cat] = Math.floor(len / 30);
     } else {
-      result[cat] = cgiSet.size;
+      result[cat] = len;
     }
     total += result[cat];
   }
@@ -1089,24 +1456,24 @@ function build5GLookup(cgiSet) {
 }
 
 // ========== Start Calculation ==========
-function startCalculation() {
+async function startCalculation() {
   if (!currentMode) return;
   showLoading('正在计算...');
-  setTimeout(() => {
-    try {
-      if (currentMode === 'national') calcNational();
-      else calcProvince();
-      hideLoading();
-    } catch(e) {
-      hideLoading();
-      alert('计算出错: ' + e.message);
-    }
-  }, 100);
+  await new Promise(r => setTimeout(r, 50));
+  try {
+    if (currentMode === 'national') await calcNational();
+    else await calcProvince();
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    alert('计算出错: ' + e.message);
+  }
 }
 
 // ========== MODE A: National ==========
-function calcNational() {
+async function calcNational() {
   const voLTEResult = [];
+  const lt = document.getElementById('loadingText');
   const voNRResult = [];
 
   // Get all provinces
@@ -1128,7 +1495,11 @@ function calcNational() {
   }
 
   // Per province
-  for (const prov of [...provSet].sort()) {
+    const sortedProvs = [...provSet].sort();
+  for (let pi = 0; pi < sortedProvs.length; pi++) {
+    const prov = sortedProvs[pi];
+    if (lt) lt.textContent = '计算中... ' + prov + ' (' + (pi+1) + '/' + sortedProvs.length + ')';
+    if (pi > 0 && pi % 3 === 0) await new Promise(r => setTimeout(r, 0));
     // VoLTE
     const volteSets = getVolteCGISets(prov);
     const volteCounts = calcFromCGISets(volteSets, VOLTE_DIV30_CATS, VOLTE_COUNT_CATS);
@@ -1145,7 +1516,7 @@ function calcNational() {
 }
 
 // ========== MODE B: Province ==========
-function calcProvince() {
+async function calcProvince() {
   const selectedProvs = [...document.querySelectorAll('#provSelector .prov-chip.selected')].map(el=>el.dataset.prov);
   if (!selectedProvs.length) { hideLoading(); alert('请至少选择一个省份'); return; }
 
@@ -1171,6 +1542,23 @@ function calcProvince() {
 
   const cgi4GLookup = build4GLookup(allCGIs);
   const cgi5GLookup = build5GLookup(allCGIs);
+
+  // === 诊断：CGI匹配率 ===
+  const diag4G = { total: allCGIs.size, matched: 0, sampleMiss: [] };
+  const diag5G = { total: allCGIs.size, matched: 0, sampleMiss: [] };
+  for (const c of allCGIs) { if (cgi4GLookup[c]) diag4G.matched++; else if (diag4G.sampleMiss.length < 5) diag4G.sampleMiss.push(c); }
+  for (const c of allCGIs) { if (cgi5GLookup[c]) diag5G.matched++; else if (diag5G.sampleMiss.length < 5) diag5G.sampleMiss.push(c); }
+  console.warn('[DIAG] 4G工参CGI匹配率:', diag4G.matched+'/'+diag4G.total, '未匹配样例:', diag4G.sampleMiss);
+  console.warn('[DIAG] 5G工参CGI匹配率:', diag5G.matched+'/'+diag5G.total, '未匹配样例:', diag5G.sampleMiss);
+  console.warn('[DIAG] 4G工参cgiCol=', document.getElementById('mGC4G_cgi')?.value, '前3行CGI样例:', gongcan4G.length ? gongcan4G[0].rows.slice(0,3).map(r=>r[document.getElementById('mGC4G_cgi')?.value||'']) : 'N/A');
+  console.warn('[DIAG] 5G工参cgiCol=', document.getElementById('mGC5G_cgi')?.value, '前3行CGI样例:', gongcan5G.length ? gongcan5G[0].rows.slice(0,3).map(r=>r[document.getElementById('mGC5G_cgi')?.value||'']) : 'N/A');
+  console.warn('[DIAG] 质差数据前3个CGI样例:', [...allCGIs].slice(0,3));
+  console.warn('[DIAG] 质差VoLTE各分类CGI数:', (()=>{const s=getVolteCGISets(selectedProvs); const o={}; for(const[k,v]of Object.entries(s))o[k]=v.length; return o;})());
+  console.warn('[DIAG] 质差VoNR各分类CGI数:', (()=>{const s=getVonrCGISets(selectedProvs); const o={}; for(const[k,v]of Object.entries(s))o[k]=v.length; return o;})());
+  console.warn('[DIAG] gongcan4G文件数/行数:', gongcan4G.length, gongcan4G.length?gongcan4G[0].rows.length:'N/A');
+  console.warn('[DIAG] gongcan5G文件数/行数:', gongcan5G.length, gongcan5G.length?gongcan5G[0].rows.length:'N/A');
+  // === 诊断结束 ===
+
   const result = { voLTE: {city:[],district:[],vendor:[]}, voNR: {city:[],district:[],vendor:[]} };
 
   function calcByDimension(volteSets, vonrSets, dimKey, isVolte) {
@@ -1185,12 +1573,24 @@ function calcProvince() {
         const dimVal = gc[dimKey] || '未知';
         if (isVolte) {
           if (!voLTEGroups[dimVal]) voLTEGroups[dimVal] = {};
-          if (!voLTEGroups[dimVal][cat]) voLTEGroups[dimVal][cat] = new Set();
-          voLTEGroups[dimVal][cat].add(cgi);
+          if (!voLTEGroups[dimVal][cat]) {
+            voLTEGroups[dimVal][cat] = VOLTE_DIV30_CATS.includes(cat) ? [] : new Set();
+          }
+          if (Array.isArray(voLTEGroups[dimVal][cat])) {
+            voLTEGroups[dimVal][cat].push(cgi);
+          } else {
+            voLTEGroups[dimVal][cat].add(cgi);
+          }
         } else {
           if (!voNRGroups[dimVal]) voNRGroups[dimVal] = {};
-          if (!voNRGroups[dimVal][cat]) voNRGroups[dimVal][cat] = new Set();
-          voNRGroups[dimVal][cat].add(cgi);
+          if (!voNRGroups[dimVal][cat]) {
+            voNRGroups[dimVal][cat] = VONR_DIV30_CATS.includes(cat) ? [] : new Set();
+          }
+          if (Array.isArray(voNRGroups[dimVal][cat])) {
+            voNRGroups[dimVal][cat].push(cgi);
+          } else {
+            voNRGroups[dimVal][cat].add(cgi);
+          }
         }
       }
     }
@@ -1205,6 +1605,15 @@ function calcProvince() {
   if (document.getElementById('dimCity').checked) dims.push({key:'city',label:'地市'});
   if (document.getElementById('dimDistrict').checked) dims.push({key:'district',label:'区县'});
   if (document.getElementById('dimVendor').checked) dims.push({key:'vendor',label:'厂家'});
+  // === 诊断：CGI原始量 ===
+  const volteProv = {};
+  for (const cat of VOLTE_ALL_CATS) {
+    const arr = volteSets[cat] || [];
+    volteProv[cat] = arr.length;
+  }
+  console.warn('[DIAG_PROV] VoLTE省原始量:', JSON.stringify(volteProv));
+  console.warn('[DIAG_PROV] cgi4GLookup keys:', Object.keys(cgi4GLookup).length);
+  console.warn('[DIAG_PROV] cgi5GLookup keys:', Object.keys(cgi5GLookup).length);
 
   for (const dim of dims) {
     // VoLTE用4G工参
@@ -1251,18 +1660,16 @@ function renderNationalResult(data) {
   // VoLTE
   if (data.voLTE.length) {
     html += `<div style="font-size:15px;font-weight:600;color:rgba(102,126,234,.9);margin:14px 0 8px">📊 VoLTE 两低两高质差小区数量（按省）</div>`;
-    const hd = ['省份', ...VOLTE_ALL_CATS.map(c=>c+'(÷30)'), ...VOLTE_COUNT_CATS.map(c=>c), '合计'];
-    // Actually show correct headers
     const headers = ['省份'];
     for (const c of VOLTE_DIV30_CATS) headers.push(c+' (÷30)');
     for (const c of VOLTE_COUNT_CATS) headers.push(c);
     headers.push('合计');
-    html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+    html += `<div class="tbl-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
     for (const r of data.voLTE) {
-      html += `<tr><td style="text-align:left">${escH(r.province)}</td>`;
-      for (const c of VOLTE_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-      for (const c of VOLTE_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-      html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+      html += `<tr><td>${escH(r.province)}</td>`;
+      for (const c of VOLTE_DIV30_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+      for (const c of VOLTE_COUNT_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+      html += `<td class="num highlight">${(r._total||0).toLocaleString()}</td></tr>`;
     }
     html += `</tbody></table></div>`;
   }
@@ -1274,12 +1681,12 @@ function renderNationalResult(data) {
     for (const c of VONR_DIV30_CATS) headers.push(c+' (÷30)');
     for (const c of VONR_COUNT_CATS) headers.push(c);
     headers.push('合计');
-    html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+    html += `<div class="tbl-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
     for (const r of data.voNR) {
-      html += `<tr><td style="text-align:left">${escH(r.province)}</td>`;
-      for (const c of VONR_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-      for (const c of VONR_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-      html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+      html += `<tr><td>${escH(r.province)}</td>`;
+      for (const c of VONR_DIV30_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+      for (const c of VONR_COUNT_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+      html += `<td class="num highlight">${(r._total||0).toLocaleString()}</td></tr>`;
     }
     html += `</tbody></table></div>`;
   }
@@ -1298,12 +1705,12 @@ function renderProvinceResult(data) {
       for (const c of VOLTE_DIV30_CATS) headers.push(c+' (÷30)');
       for (const c of VOLTE_COUNT_CATS) headers.push(c);
       headers.push('合计');
-      html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+      html += `<div class="tbl-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
       for (const r of data.voLTE[dim]) {
-        html += `<tr><td style="text-align:left">${escH(r.dimension)}</td>`;
-        for (const c of VOLTE_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-        for (const c of VOLTE_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-        html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+        html += `<tr><td>${escH(r.dimension)}</td>`;
+        for (const c of VOLTE_DIV30_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+        for (const c of VOLTE_COUNT_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+        html += `<td class="num highlight">${(r._total||0).toLocaleString()}</td></tr>`;
       }
       html += `</tbody></table></div>`;
     }
@@ -1314,12 +1721,12 @@ function renderProvinceResult(data) {
       for (const c of VONR_DIV30_CATS) headers.push(c+' (÷30)');
       for (const c of VONR_COUNT_CATS) headers.push(c);
       headers.push('合计');
-      html += `<div class="tbl-wrap"><table style="width:100%;text-align:left"><thead><tr>${headers.map(h=>`<th style="text-align:left">${h}</th>`).join('')}</tr></thead><tbody>`;
+      html += `<div class="tbl-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
       for (const r of data.voNR[dim]) {
-        html += `<tr><td style="text-align:left">${escH(r.dimension)}</td>`;
-        for (const c of VONR_DIV30_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-        for (const c of VONR_COUNT_CATS) html += `<td class="num" style="text-align:right">${(r[c]||0).toLocaleString()}</td>`;
-        html += `<td class="num highlight" style="text-align:right">${(r._total||0).toLocaleString()}</td></tr>`;
+        html += `<tr><td>${escH(r.dimension)}</td>`;
+        for (const c of VONR_DIV30_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+        for (const c of VONR_COUNT_CATS) html += `<td class="num">${(r[c]||0).toLocaleString()}</td>`;
+        html += `<td class="num highlight">${(r._total||0).toLocaleString()}</td></tr>`;
       }
       html += `</tbody></table></div>`;
     }
@@ -1428,16 +1835,18 @@ function showLoading(txt){document.getElementById('loadingText').textContent=txt
 function hideLoading(){document.getElementById('loadingMask').classList.remove('show')}
 
 // ========== Drag & Drop ==========
-['upVoLTE','upVoNR','upGongcan'].forEach(id=>{
+['upVoLTE','upVoNR','upGongcan4G','upGongcan5G'].forEach(id=>{
   const el=document.getElementById(id);
+  if(!el) return;
   el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});
   el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
   el.addEventListener('drop',e=>{
     e.preventDefault(); el.classList.remove('drag-over');
     const files=e.dataTransfer.files;
-    if(id==='upVoLTE'&&files[0]) { const inp=document.getElementById('fileVoLTE'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleVolteFile(inp); }
-    if(id==='upVoNR'&&files[0]) { const inp=document.getElementById('fileVoNR'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleVonrFile(inp); }
-    if(id==='upGongcan'&&files.length) { const inp=document.getElementById('fileGongcan'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleGongcanFiles(inp); }
+    if(id==='upVoLTE'&&files[0]) { const inp=document.getElementById('fileVoLTE'); const dt=new DataTransfer(); dt.items.add(files[0]); inp.files=dt.files; handleVolteFile(inp); }
+    if(id==='upVoNR'&&files[0]) { const inp=document.getElementById('fileVoNR'); const dt=new DataTransfer(); dt.items.add(files[0]); inp.files=dt.files; handleVonrFile(inp); }
+    if(id==='upGongcan4G'&&files.length) { const inp=document.getElementById('fileGongcan4G'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleGongcan4GFile(inp); }
+    if(id==='upGongcan5G'&&files.length) { const inp=document.getElementById('fileGongcan5G'); const dt=new DataTransfer(); for(const f of files) dt.items.add(f); inp.files=dt.files; handleGongcan5GFile(inp); }
   });
 });
 </script>
